@@ -4,12 +4,12 @@
 #include "global.h"
 #include "GameOfLife.h"
 #include "sequential/GameOfLifeSeq.h"
+#include "util/input.h"
 
 
 int main() {
 
     // https://www.geeksforgeeks.org/program-for-conways-game-of-life/
-    // int size = 10;
     // std::string textInput = ".........."
     //                         "...**....."
     //                         "....*....."
@@ -20,7 +20,6 @@ int main() {
     //                         ".........."
     //                         ".........."
     //                         "..........";
-    int size = 10;
     std::string textInput = ".........."
                             "...**....."
                             "....*....."
@@ -31,20 +30,13 @@ int main() {
                             ".....*...."
                             "....*....."
                             "..........";
-    // int size = 3;
     // std::string textInput = "..."
     //                         ".*."
     //                         "...";
-    std::vector<char> rawInput(textInput.begin(), textInput.end());
-    // Transform input
-    // https://stackoverflow.com/a/51075101
-    std::vector<Cell> input;
-    input.reserve(rawInput.size());
-    std::transform(rawInput.begin(), rawInput.end(),
-                   std::back_inserter(input),
-                   [](char elem) {
-                       return elem == '.' ? DEAD : ALIVE;
-                   });
+
+    auto input = Util::textInput(textInput);
+    auto size = input.size;
+    auto grid = input.grid;
 
     GameOfLifeSeq impl;
     GameOfLife& game = impl;
@@ -62,5 +54,5 @@ int main() {
         std::cout << std::endl;
     };
 
-    game.run(15, size, input, printCallback);
+    game.run(15, size, grid, printCallback);
 }
