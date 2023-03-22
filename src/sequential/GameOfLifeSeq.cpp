@@ -22,29 +22,58 @@ int neighbourCount(
     return count;
 }
 
+void toBeOrNotToBe(
+    int pos,
+    int aliveNeighbours,
+    std::vector<Cell>& grid,
+    std::vector<Cell>& newGrid
+) {
+    // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
+    if (grid[pos] == ALIVE) {
+        // Any live cell with two or three live neighbours survives.
+        if (aliveNeighbours == 2 || aliveNeighbours == 3)
+            newGrid[pos] = ALIVE;
+        // All other live cells die in the next generation.
+        // Similarly, all other dead cells stay dead.
+        // Note: no else is needed as DEAD is the default value
+    } else if (aliveNeighbours == 3) {
+        // Any dead cell with three live neighbours becomes a live cell.
+        newGrid[pos] = ALIVE;
+    }
+}
+
 void nextGeneration(
     int size,
     std::vector<Cell>& grid
 ) {
-    std::vector<Cell> newGrid(2);
+    std::vector<Cell> newGrid(2, DEAD);
 
     for (auto i = 0; i < size; ++i) {
         auto startIndex = size + 3 + (i * 2);
         for (auto j = 0; j < size; ++j) {
             auto pos = startIndex + j;
             auto aliveNeighbours = neighbourCount(pos, size, grid);
+            toBeOrNotToBe(pos, aliveNeighbours, grid, newGrid);
         }
     }
 
+    // Copy grid
+    // https://stackoverflow.com/a/644677
     grid = newGrid;
 }
 
 void GameOfLifeSeq::run(
     int size,
-    const std::vector<Cell> grid,
+    const std::vector<Cell>& grid,
     std::function<void(std::vector<Cell>)> callback
 ) const {
+    // TODO use input
 
+
+
+    for (auto i = 0; i < 1; ++i) {
+
+    }
 
 
     callback(grid);

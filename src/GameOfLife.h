@@ -14,7 +14,7 @@ public:
     // virtual void run(std::vector<Cell> grid, std::function<std::vector<Cell>> callback) const;
     virtual void run(
         int size,
-        std::vector<Cell> grid,
+        const std::vector<Cell>& grid,
         std::function<void(std::vector<Cell>)> callback
     ) const;
 };

@@ -15,7 +15,7 @@ class GameOfLifeSeq : public GameOfLife {
 public:
     void run(
         int size,
-        std::vector<Cell> grid,
+        const std::vector<Cell>& grid,
         std::function<void(std::vector<Cell>)> callback
     ) const override;
 };
