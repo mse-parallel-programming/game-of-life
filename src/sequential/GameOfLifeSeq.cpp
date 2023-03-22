@@ -79,21 +79,30 @@ void padGrid(
 }
 
 void GameOfLifeSeq::run(
-    int iterations,
+    int generations,
     int size,
     const std::vector<Cell>& grid,
     std::function<void(std::vector<Cell>)> callback
 ) const {
-    // TODO use input
-
     std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
     padGrid(size, grid, paddedGrid);
 
-
-    for (auto i = 0; i < iterations; ++i) {
+    for (auto i = 0; i < generations; ++i) {
         nextGeneration(size, paddedGrid);
         callback(paddedGrid);
     }
+
+}
+
+void GameOfLifeSeq::benchmark(
+    int iterations,
+    int generations,
+    int size,
+    const std::vector<Cell>& grid
+) const {
+
+    std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
+    padGrid(size, grid, paddedGrid);
 
 }
 

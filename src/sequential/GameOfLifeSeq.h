@@ -14,11 +14,18 @@
 class GameOfLifeSeq : public GameOfLife {
 public:
     void run(
-        int iterations,
+        int generations,
         int size,
         const std::vector<Cell>& grid,
         std::function<void(std::vector<Cell>)> callback
     ) const override;
+
+    void benchmark(
+        int iterations,
+        int generations,
+        int size,
+        const std::vector<Cell>& grid
+    ) const;
 };
 
 
