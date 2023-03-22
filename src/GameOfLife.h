@@ -13,6 +13,7 @@ class GameOfLife {
 public:
     // virtual void run(std::vector<Cell> grid, std::function<std::vector<Cell>> callback) const;
     virtual void run(
+        int iterations,
         int size,
         const std::vector<Cell>& grid,
         std::function<void(std::vector<Cell>)> callback

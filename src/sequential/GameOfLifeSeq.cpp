@@ -2,6 +2,7 @@
 // Created by kurbaniec on 22.03.2023.
 //
 
+#include <iostream>
 #include "GameOfLifeSeq.h"
 
 int neighbourCount(
@@ -35,7 +36,7 @@ void toBeOrNotToBe(
             newGrid[pos] = ALIVE;
         // All other live cells die in the next generation.
         // Similarly, all other dead cells stay dead.
-        // Note: no else is needed as DEAD is the default value
+        // -- Note: no else is needed as DEAD is the default value
     } else if (aliveNeighbours == 3) {
         // Any dead cell with three live neighbours becomes a live cell.
         newGrid[pos] = ALIVE;
@@ -78,6 +79,7 @@ void padGrid(
 }
 
 void GameOfLifeSeq::run(
+    int iterations,
     int size,
     const std::vector<Cell>& grid,
     std::function<void(std::vector<Cell>)> callback
@@ -88,11 +90,10 @@ void GameOfLifeSeq::run(
     padGrid(size, grid, paddedGrid);
 
 
-    for (auto i = 0; i < 1; ++i) {
+    for (auto i = 0; i < iterations; ++i) {
         nextGeneration(size, paddedGrid);
+        callback(paddedGrid);
     }
 
-
-    callback(paddedGrid);
 }
 

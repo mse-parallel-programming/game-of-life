@@ -48,16 +48,19 @@ int main() {
 
     GameOfLifeSeq impl;
     GameOfLife& game = impl;
-    game.run(size, input,
-     [size](const std::vector<Cell>& iterationGrid) {
-         for (auto i = 0; i < size; ++i) {
-             auto startIndex = size + 3 + (i * 2) + (i * size);
-             for (auto j = 0; j < size; ++j) {
-                 auto pos = startIndex + j;
-                 auto cell = iterationGrid[pos];
-                 std::cout << cell << " ";
-             }
-             std::cout << std::endl;
-         }
-     });
+
+    auto printCallback = [size](const std::vector<Cell>& iterationGrid) {
+        for (auto i = 0; i < size; ++i) {
+            auto startIndex = size + 3 + (i * 2) + (i * size);
+            for (auto j = 0; j < size; ++j) {
+                auto pos = startIndex + j;
+                auto cell = iterationGrid[pos];
+                std::cout << cell << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    };
+
+    game.run(15, size, input, printCallback);
 }
