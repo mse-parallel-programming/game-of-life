@@ -46,10 +46,10 @@ void nextGeneration(
     int size,
     std::vector<Cell>& grid
 ) {
-    std::vector<Cell> newGrid(2, DEAD);
+    std::vector<Cell> newGrid(grid.size(), DEAD);
 
     for (auto i = 0; i < size; ++i) {
-        auto startIndex = size + 3 + (i * 2);
+        auto startIndex = size + 3 + (i * 2) + (i * size);
         for (auto j = 0; j < size; ++j) {
             auto pos = startIndex + j;
             auto aliveNeighbours = neighbourCount(pos, size, grid);
@@ -62,6 +62,21 @@ void nextGeneration(
     grid = newGrid;
 }
 
+void padGrid(
+    int size,
+    const std::vector<Cell>& grid,
+    std::vector<Cell>& paddedGrid
+) {
+    for (auto i = 0; i < size; ++i) {
+        auto startIndex = size + 3 + (i * 2) + (i * size);
+        for (auto j = 0; j < size; ++j) {
+            auto pos = (i * size) + j;
+            auto padPos = startIndex + j;
+            paddedGrid[padPos] = grid[pos];
+        }
+    }
+}
+
 void GameOfLifeSeq::run(
     int size,
     const std::vector<Cell>& grid,
@@ -69,13 +84,15 @@ void GameOfLifeSeq::run(
 ) const {
     // TODO use input
 
+    std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
+    padGrid(size, grid, paddedGrid);
 
 
     for (auto i = 0; i < 1; ++i) {
-
+        nextGeneration(size, paddedGrid);
     }
 
 
-    callback(grid);
+    callback(paddedGrid);
 }
 
