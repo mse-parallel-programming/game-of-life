@@ -15,17 +15,8 @@ cmake-build-debug
 cmake-build-debug-visual-studio
 cmake-build-release
 cmake-build-relase-visual-studio
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
+cmake-build-release-relwithdebinfo
+cmake-build-release-relwithdebinfo-visual-studio
 bin
 !dependencies/freeglut/bin/
 !dependencies/assimp/bin/
@@ -64,3 +55,4 @@ CMakeSettings.json
 
 # Excel
 ~$graphs.xlsx
+/cmake-build-relwithdebinfo/

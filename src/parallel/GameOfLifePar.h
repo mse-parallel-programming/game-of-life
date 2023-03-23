@@ -2,8 +2,8 @@
 // Created by kurbaniec on 22.03.2023.
 //
 
-#ifndef PPR_GAME_OF_LIFE_GAMEOFLIFESEQ_H
-#define PPR_GAME_OF_LIFE_GAMEOFLIFESEQ_H
+#ifndef PPR_GAME_OF_LIFE_GAMEOFLIFEPAR_H
+#define PPR_GAME_OF_LIFE_GAMEOFLIFEPAR_H
 
 
 #include "../GameOfLife.h"
@@ -11,7 +11,7 @@
 // #include <vector>
 // #include <functional>
 
-class GameOfLifeSeq : public GameOfLife {
+class GameOfLifePar : public GameOfLife {
 public:
     void run(
         int generations,
@@ -52,4 +52,4 @@ private:
 };
 
 
-#endif //PPR_GAME_OF_LIFE_GAMEOFLIFESEQ_H
+#endif //PPR_GAME_OF_LIFE_GAMEOFLIFEPAR_H

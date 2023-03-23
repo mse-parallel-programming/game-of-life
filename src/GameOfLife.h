@@ -16,14 +16,14 @@ public:
         int size,
         const std::vector<Cell>& grid,
         std::function<void(std::vector<Cell>)> callback
-    ) const;
+    );
 
     virtual void benchmark(
         int iterations,
         int generations,
         int size,
         const std::vector<Cell>& grid
-    ) const;
+    );
 };
 
 #endif //PPR_GAME_OF_LIFE_GAMEOFLIFE_H

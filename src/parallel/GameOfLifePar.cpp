@@ -3,10 +3,10 @@
 //
 
 #include <iostream>
-#include "GameOfLifeSeq.h"
+#include "GameOfLifePar.h"
 #include <chrono>
 
-int GameOfLifeSeq::neighbourCount(
+int GameOfLifePar::neighbourCount(
     int pos, int size,
     std::vector<Cell>& grid
 ) const {
@@ -24,7 +24,7 @@ int GameOfLifeSeq::neighbourCount(
     return count;
 }
 
-void GameOfLifeSeq::toBeOrNotToBe(
+void GameOfLifePar::toBeOrNotToBe(
     int pos,
     int aliveNeighbours,
     std::vector<Cell>& grid,
@@ -44,12 +44,15 @@ void GameOfLifeSeq::toBeOrNotToBe(
     }
 }
 
-void GameOfLifeSeq::nextGeneration(
+void GameOfLifePar::nextGeneration(
     int size,
     std::vector<Cell>& grid
 ) {
     std::vector<Cell> newGrid(grid.size(), DEAD);
 
+    #pragma omp parallel for \
+    schedule(static) \
+    default(none) firstprivate(size) shared(grid, newGrid)
     for (auto i = 0; i < size; ++i) {
         auto startIndex = size + 3 + (i * 2) + (i * size);
         for (auto j = 0; j < size; ++j) {
@@ -64,7 +67,7 @@ void GameOfLifeSeq::nextGeneration(
     grid = newGrid;
 }
 
-void GameOfLifeSeq::padGrid(
+void GameOfLifePar::padGrid(
     int size,
     const std::vector<Cell>& grid,
     std::vector<Cell>& paddedGrid
@@ -79,7 +82,7 @@ void GameOfLifeSeq::padGrid(
     }
 }
 
-void GameOfLifeSeq::run(
+void GameOfLifePar::run(
     int generations,
     int size,
     const std::vector<Cell>& grid,
@@ -95,7 +98,7 @@ void GameOfLifeSeq::run(
 
 }
 
-void GameOfLifeSeq::benchmark(
+void GameOfLifePar::benchmark(
     int iterations,
     int generations,
     int size,

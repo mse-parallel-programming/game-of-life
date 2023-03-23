@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ -lwsock32 -lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
 
-add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/sequential/GameOfLifeSeq.cpp src/sequential/GameOfLifeSeq.h src/GameOfLife.h src/util/Input.h)
+add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/sequential/GameOfLifeSeq.cpp src/sequential/GameOfLifeSeq.h src/GameOfLife.h src/util/Input.h src/parallel/GameOfLifePar.cpp src/parallel/GameOfLifePar.h)
 
 # OpenMP
 find_package(OpenMP)

@@ -5,6 +5,7 @@
 #include "GameOfLife.h"
 #include "sequential/GameOfLifeSeq.h"
 #include "util/input.h"
+#include "parallel/GameOfLifePar.h"
 
 
 int main() {
@@ -36,12 +37,13 @@ int main() {
 
     // auto input = Util::textInput(textInput);
 
-    auto input = Util::randomInput(256, 0.25);
+    auto input = Util::randomInput(512, 0.25);
     auto size = input.size;
     auto grid = input.grid;
 
-    GameOfLifeSeq impl;
-    GameOfLife& game = impl;
+    GameOfLifeSeq seqImpl;
+    GameOfLifePar parImpl;
+    // GameOfLife& game = seqImpl;
 
     auto printCallback = [size](const std::vector<Cell>& iterationGrid) {
         for (auto i = 0; i < size; ++i) {
@@ -56,6 +58,9 @@ int main() {
         std::cout << std::endl;
     };
 
-    // game.run(15, size, grid, printCallback);
-    game.benchmark(10, 1000, size, grid);
+    // seqImpl.run(15, size, grid, printCallback);
+    seqImpl.benchmark(10, 1000, size, grid);
+
+    // parImpl.run(15, size, grid, printCallback);
+    parImpl.benchmark(10, 1000, size, grid);
 }
