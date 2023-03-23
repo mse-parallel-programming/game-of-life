@@ -54,5 +54,6 @@ int main() {
         std::cout << std::endl;
     };
 
-    game.run(15, size, grid, printCallback);
+    // game.run(15, size, grid, printCallback);
+    game.benchmark(10, 1000, size, grid);
 }

@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "GameOfLifeSeq.h"
+#include <chrono>
 
 int neighbourCount(
     int pos, int size,
@@ -87,7 +88,7 @@ void GameOfLifeSeq::run(
     std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
     padGrid(size, grid, paddedGrid);
 
-    for (auto i = 0; i < generations; ++i) {
+    for (auto g = 0; g < generations; ++g) {
         nextGeneration(size, paddedGrid);
         callback(paddedGrid);
     }
@@ -101,8 +102,24 @@ void GameOfLifeSeq::benchmark(
     const std::vector<Cell>& grid
 ) const {
 
-    std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
-    padGrid(size, grid, paddedGrid);
+    std::chrono::duration<double, std::milli> averageTime
+        = std::chrono::milliseconds::zero();
 
+    for (auto i = 0; i < iterations; ++i) {
+        std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
+        padGrid(size, grid, paddedGrid);
+
+        auto start = std::chrono::high_resolution_clock::now();
+        for (auto g = 0; g < generations; ++g) {
+            nextGeneration(size, paddedGrid);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+
+        averageTime += end-start;
+    }
+
+    averageTime /= iterations;
+
+    std::cout << "Average time: " << averageTime.count() << " ms";
 }
 
