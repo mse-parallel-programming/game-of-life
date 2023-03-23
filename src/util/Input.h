@@ -12,13 +12,13 @@
 #include "../global.h"
 
 namespace Util {
-    struct TextInput {
+    struct GameInput {
     public:
         int size;
         std::vector<Cell> grid;
     };
 
-    static TextInput textInput(const std::string& textInput) {
+    static GameInput textInput(const std::string& textInput) {
         auto size = sqrt((double)textInput.size());
         // Check if integer
         // https://stackoverflow.com/a/1521682
@@ -38,7 +38,21 @@ namespace Util {
                 return elem == '.' ? DEAD : ALIVE;
             });
 
-        return TextInput {(int) size, input };
+        return GameInput {(int) size, input };
+    }
+
+    static GameInput randomInput(int size, double alivePercentage) {
+        int length = size*size;
+        std::vector<Cell> input(length, DEAD);
+
+        for (auto i = 0; i < length; ++i) {
+            // Random value with distribution
+            auto val = (double)rand() / RAND_MAX;
+            if (val < alivePercentage)
+                input[i] = ALIVE;
+        }
+
+        return GameInput { size, input };
     }
 }
 

@@ -20,21 +20,23 @@ int main() {
     //                         ".........."
     //                         ".........."
     //                         "..........";
-    std::string textInput = ".........."
-                            "...**....."
-                            "....*....."
-                            ".........."
-                            ".........."
-                            "...**....."
-                            "..**......"
-                            ".....*...."
-                            "....*....."
-                            "..........";
+    // std::string textInput = ".........."
+    //                         "...**....."
+    //                         "....*....."
+    //                         ".........."
+    //                         ".........."
+    //                         "...**....."
+    //                         "..**......"
+    //                         ".....*...."
+    //                         "....*....."
+    //                         "..........";
     // std::string textInput = "..."
     //                         ".*."
     //                         "...";
 
-    auto input = Util::textInput(textInput);
+    // auto input = Util::textInput(textInput);
+
+    auto input = Util::randomInput(256, 0.25);
     auto size = input.size;
     auto grid = input.grid;
 
