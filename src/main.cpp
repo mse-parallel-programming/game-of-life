@@ -8,6 +8,7 @@
 #include "sequential/GameOfLifeSeq.h"
 #include "util/input.h"
 #include "parallel/GameOfLifePar.h"
+#include "asio.hpp"
 
 
 int main() {
@@ -73,12 +74,17 @@ int main() {
     // parImpl.run(15, size, grid, printCallback);
     // parImpl.benchmark(10, 1000, size, grid);
 
-    auto gameInput = GameOfLife::GameInput {
-        size, grid
-    };
-    auto benchmarkInput = GameOfLife::BenchmarkInput {
-        10, 1000, true, 1
-    };
-    auto result = GameOfLife::benchmark(gameInput, benchmarkInput);
-    result.print();
+    // auto gameInput = GameOfLife::GameInput {
+    //     size, grid
+    // };
+    // auto benchmarkInput = GameOfLife::BenchmarkInput {
+    //     10, 1000, true, 1
+    // };
+    // auto result = GameOfLife::benchmark(gameInput, benchmarkInput);
+    // result.print();
+
+    // https://www.codeproject.com/Articles/1264257/Socket-Programming-in-Cplusplus-using-boost-asio-T
+    // https://sourceforge.net/projects/asio/files/asio/1.26.0%20%28Stable%29/asio-1.26.0.zip/download
+    asio::io_service kek;
+    std::cout << "kek";
 }
