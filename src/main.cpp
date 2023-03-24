@@ -1,8 +1,10 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <omp.h>
+#include <thread>
 #include "global.h"
-#include "GameOfLife.h"
+#include "gameoflife/GameOfLife.h"
 #include "sequential/GameOfLifeSeq.h"
 #include "util/input.h"
 #include "parallel/GameOfLifePar.h"
@@ -41,8 +43,8 @@ int main() {
     auto size = input.size;
     auto grid = input.grid;
 
-    GameOfLifeSeq seqImpl;
-    GameOfLifePar parImpl;
+    // GameOfLifeSeq seqImpl;
+    // GameOfLifePar parImpl;
     // GameOfLife& game = seqImpl;
 
     auto printCallback = [size](const std::vector<Cell>& iterationGrid) {
@@ -59,8 +61,24 @@ int main() {
     };
 
     // seqImpl.run(15, size, grid, printCallback);
-    seqImpl.benchmark(10, 1000, size, grid);
+    // seqImpl.benchmark(10, 1000, size, grid);
+
+    // omp_set_dynamic(0);
+    // omp_set_num_threads(1);
+
+    // std::cout << "baum " << omp_get_thread_limit() << std::endl;
+    // std::cout << "baum " << omp_get_max_threads() << std::endl;
+    // std::cout << "hey" << std::thread::hardware_concurrency();
 
     // parImpl.run(15, size, grid, printCallback);
-    parImpl.benchmark(10, 1000, size, grid);
+    // parImpl.benchmark(10, 1000, size, grid);
+
+    auto gameInput = GameOfLife::GameInput {
+        size, grid
+    };
+    auto benchmarkInput = GameOfLife::BenchmarkInput {
+        10, 1000, true, 1
+    };
+    auto result = GameOfLife::benchmark(gameInput, benchmarkInput);
+    result.print();
 }
