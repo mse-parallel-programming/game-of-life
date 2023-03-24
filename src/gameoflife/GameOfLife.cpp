@@ -21,9 +21,9 @@ namespace {
         return count;
     }
 
-    void toBeOrNotToBe(int pos, int aliveNeighbours, std::vector<Cell>& grid, std::vector<Cell>& newGrid) {
+    void toBeOrNotToBe(int pos, int aliveNeighbours, std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid) {
         // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
-        if (grid[pos] == ALIVE) {
+        if (oldGrid[pos] == ALIVE) {
             // Any live cell with two or three live neighbours survives.
             if (aliveNeighbours == 2 || aliveNeighbours == 3)
                 newGrid[pos] = ALIVE;
@@ -36,24 +36,28 @@ namespace {
         }
     }
 
-    void nextGeneration(int size, std::vector<Cell>& grid) {
-        std::vector<Cell> newGrid(grid.size(), DEAD);
+    void nextGeneration(
+        int size,
+        std::vector<Cell>& oldGrid,
+        std::vector<Cell>& newGrid
+    ) {
+        // std::vector<Cell> newGrid(oldGrid.size(), DEAD);
 
         #pragma omp parallel for \
         schedule(static) \
-        default(none) firstprivate(size) shared(grid, newGrid)
+        default(none) firstprivate(size) shared(oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
-                auto aliveNeighbours = neighbourCount(pos, size, grid);
-                toBeOrNotToBe(pos, aliveNeighbours, grid, newGrid);
+                auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
+                toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
             }
         }
 
         // Copy grid
         // https://stackoverflow.com/a/644677
-        grid = newGrid;
+        oldGrid = newGrid;
     }
 
     void flattenAndPadGrid(
@@ -93,13 +97,16 @@ namespace GameOfLife {
         std::vector<std::chrono::duration<double, std::milli>> measurements;
         measurements.reserve(iterations);
 
+
         for (auto i = 0; i < iterations; ++i) {
-            std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
-            flattenAndPadGrid(size, grid, paddedGrid);
+            std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+            flattenAndPadGrid(size, grid, oldGrid);
+            std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
 
             auto start = std::chrono::high_resolution_clock::now();
             for (auto g = 0; g < generations; ++g) {
-                nextGeneration(size, paddedGrid);
+                nextGeneration(size, oldGrid, newGrid);
+                swap(oldGrid, newGrid);
             }
             auto end = std::chrono::high_resolution_clock::now();
 
@@ -108,6 +115,29 @@ namespace GameOfLife {
 
 
         return BenchmarkResult(measurements);
+    }
+
+    void run(
+        const GameInput& input,
+        const std::function<bool(
+            std::vector<Cell>& oldGrid,
+            std::vector<Cell>& newGrid
+        )>& callback
+    ) {
+        auto size = input.size;
+        auto& grid = input.grid;
+
+        std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+        flattenAndPadGrid(size, grid, oldGrid);
+        std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+
+        auto running = true;
+        while(running) {
+            nextGeneration(size, oldGrid, newGrid);
+            running = callback(oldGrid, newGrid);
+            swap(oldGrid, newGrid);
+        }
+
     }
 }
 

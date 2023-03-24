@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ppr.messages.BenchmarkInput;
 import ppr.messages.GameInput;
 import ppr.messages.StartMessage;
+import ppr.util.Input;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,21 +19,32 @@ import java.util.List;
  */
 public class Main {
     public static void main(String[] args) {
-        String hostname = "localhost";
-        int portNumber = 1234;
+
+        var textInput = ".........." +
+                "...**....." +
+                "....*....." +
+                ".........." +
+                ".........." +
+                "...**....." +
+                "..**......" +
+                ".....*...." +
+                "....*....." +
+                "..........";
+        var size = 10;
+        var grid = Input.textInput(textInput);
 
         var objectMapper = new ObjectMapper();
         var startMsgObj = new StartMessage();
         var input = new GameInput();
-        input.size = 3;
-        input.grid = List.of(Arrays.asList(true, false, true));
-        var benchmarkInput = new BenchmarkInput();
-        benchmarkInput.generations = 1000;
-        benchmarkInput.iterations = 3;
-        benchmarkInput.dynamic = true;
-        benchmarkInput.threadCount = 12;
+        input.size = size;
+        input.grid = grid;
+        // var benchmarkInput = new BenchmarkInput();
+        // benchmarkInput.generations = 1000;
+        // benchmarkInput.iterations = 3;
+        // benchmarkInput.dynamic = true;
+        // benchmarkInput.threadCount = 12;
         startMsgObj.input = input;
-        startMsgObj.benchmarkInput = benchmarkInput;
+        // startMsgObj.benchmarkInput = benchmarkInput;
 
         String startMsg = "";
         try {
@@ -42,15 +54,30 @@ public class Main {
             ex.printStackTrace();
         }
 
-
+        String hostname = "localhost";
+        int portNumber = 1234;
         try (
                 var socket = new Socket(hostname, portNumber);
                 var out = new PrintWriter(socket.getOutputStream(), true);
                 var in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ) {
-            var msg = in.readLine();
-            System.out.println(msg);
+            var initialMsg = in.readLine();
+            System.out.println(initialMsg);
             out.println(startMsg);
+
+            // TODO: exit? error handling?
+            for(var i = 0; i < 10; ++i) {
+                var msg = in.readLine();
+                // TODO: Receive json diff
+                msg = msg.replaceAll(";", "\n");
+                System.out.println(msg);
+                Thread.sleep(1500);
+                if ((i+1) == 10)
+                    out.println("end!");
+                else
+                    out.println("next!");
+            }
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -35,7 +35,8 @@
 namespace {
     void nextGeneration(
         int size,
-        std::vector<Cell>& grid
+        std::vector<Cell>& oldGrid,
+        std::vector<Cell>& newGrid
     );
 
     int neighbourCount(
@@ -46,7 +47,7 @@ namespace {
     void toBeOrNotToBe(
         int pos,
         int aliveNeighbours,
-        std::vector<Cell>& grid,
+        std::vector<Cell>& oldGrid,
         std::vector<Cell>& newGrid
     );
 
@@ -55,11 +56,25 @@ namespace {
         const std::vector<std::vector<Cell>>& grid,
         std::vector<Cell>& paddedGrid
     );
+
+    void swap(
+        std::vector<Cell>& oldGrid,
+        std::vector<Cell>& newGrid
+    ) {
+        oldGrid = newGrid;
+        std::fill(newGrid.begin(), newGrid.end(), DEAD);
+    }
 }
 
 namespace GameOfLife {
 
-
+    void run(
+        const GameInput& input,
+        const std::function<bool(
+            std::vector<Cell>& oldGrid,
+            std::vector<Cell>& newGrid
+        )>& callback
+    );
 
     BenchmarkResult benchmark(
         const GameInput& input,

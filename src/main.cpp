@@ -54,26 +54,26 @@ int main() {
 
     // auto input = Util::textInput(textInput);
 
-    auto input = Util::randomInput(512, 0.25);
-    auto size = input.size;
-    auto grid = input.grid;
+    // auto input = Util::randomInput(512, 0.25);
+    // auto size = input.size;
+    // auto grid = input.grid;
 
     // GameOfLifeSeq seqImpl;
     // GameOfLifePar parImpl;
     // GameOfLife& game = seqImpl;
 
-    auto printCallback = [size](const std::vector<Cell>& iterationGrid) {
-        for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
-            for (auto j = 0; j < size; ++j) {
-                auto pos = startIndex + j;
-                auto cell = iterationGrid[pos];
-                std::cout << cell << " ";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-    };
+    // auto printCallback = [size](const std::vector<Cell>& iterationGrid) {
+    //     for (auto i = 0; i < size; ++i) {
+    //         auto startIndex = size + 3 + (i * 2) + (i * size);
+    //         for (auto j = 0; j < size; ++j) {
+    //             auto pos = startIndex + j;
+    //             auto cell = iterationGrid[pos];
+    //             std::cout << cell << " ";
+    //         }
+    //         std::cout << std::endl;
+    //     }
+    //     std::cout << std::endl;
+    // };
 
     // seqImpl.run(15, size, grid, printCallback);
     // seqImpl.benchmark(10, 1000, size, grid);
@@ -99,6 +99,7 @@ int main() {
 
     // https://www.codeproject.com/Articles/1264257/Socket-Programming-in-Cplusplus-using-boost-asio-T
     // https://sourceforge.net/projects/asio/files/asio/1.26.0%20%28Stable%29/asio-1.26.0.zip/download
+    // https://stackoverflow.com/a/75828304
     asio::io_service ioService;
     asio::ip::tcp::acceptor acceptor(
         ioService,
@@ -114,7 +115,7 @@ int main() {
     std::cout << "Waiting for reply" << std::endl;
     auto msg = read(socket);
     std::cout << msg << std::endl;
-    socket.close();
+
 
 
     nlohmann::json j = nlohmann::json::parse(msg);
@@ -123,9 +124,34 @@ int main() {
     std::cout << msgStruct.input.size << std::endl;
     if (auto benchmarkInput = msgStruct.benchmarkInput) {
         std::cout << benchmarkInput->dynamic.has_value() << std::endl;
-        std::cout << *benchmarkInput->dynamic <<  std::endl;
+        std::cout << *benchmarkInput->dynamic << std::endl;
         std::cout << benchmarkInput->threadCount.has_value() << std::endl;
-        std::cout << *benchmarkInput->threadCount <<  std::endl;
+        std::cout << *benchmarkInput->threadCount << std::endl;
     }
-    // std::cout << msgStruct.input.grid << std::endl;
+
+    auto size = msgStruct.input.size;
+    auto socketCallback = [&socket, size](
+        std::vector<Cell>& oldGrid,
+        std::vector<Cell>& newGrid
+    ) {
+        // TODO: Send json diff
+        std::stringstream out;
+        for (auto i = 0; i < size; ++i) {
+            auto startIndex = size + 3 + (i * 2) + (i * size);
+            for (auto j = 0; j < size; ++j) {
+                auto pos = startIndex + j;
+                auto cell = newGrid[pos];
+                out << cell << " ";
+            }
+            out << ";";
+        }
+        send(socket, out.str());
+        auto response = read(socket);
+        if (response == "end!") return false;
+        return true;
+    };
+
+    GameOfLife::run(msgStruct.input, socketCallback);
+
+    socket.close();
 }
