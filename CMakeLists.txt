@@ -21,7 +21,7 @@ add_definitions(-DBOOST_ALL_NO_LIB)
 add_definitions(-D_WIN32_WINNT=0x0501)
 add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
 
-add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/sequential/GameOfLifeSeq.cpp src/sequential/GameOfLifeSeq.h src/gameoflife/GameOfLife.h src/util/Input.h src/parallel/GameOfLifePar.cpp src/parallel/GameOfLifePar.h src/gameoflife/benchmark/BenchmarkResult.h src/gameoflife/benchmark/BenchmarkInput.h src/gameoflife/GameInput.h src/gameoflife/GameOfLife.cpp)
+add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/sequential/GameOfLifeSeq.cpp src/sequential/GameOfLifeSeq.h src/gameoflife/GameOfLife.h src/util/Input.h src/parallel/GameOfLifePar.cpp src/parallel/GameOfLifePar.h src/gameoflife/benchmark/BenchmarkResult.h src/messages/BenchmarkInput.h src/messages/GameInput.h src/gameoflife/GameOfLife.cpp src/messages/StartMessage.h)
 
 # OpenMP
 find_package(OpenMP)
@@ -30,3 +30,5 @@ if(OpenMP_CXX_FOUND)
 endif()
 # Asio
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/asio-1.26.0/include)
+# JSON for Modern C++
+include_directories(${PROJECT_SOURCE_DIR}/dependencies/json-3.11.2)

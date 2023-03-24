@@ -9,6 +9,8 @@
 #include "util/input.h"
 #include "parallel/GameOfLifePar.h"
 #include "asio.hpp"
+#include "json.hpp"
+#include "messages/StartMessage.h"
 
 
 std::string read(asio::ip::tcp::socket& socket) {
@@ -113,4 +115,17 @@ int main() {
     auto msg = read(socket);
     std::cout << msg << std::endl;
     socket.close();
+
+
+    nlohmann::json j = nlohmann::json::parse(msg);
+    auto msgStruct = j.get<GameOfLife::StartMessage>();
+
+    std::cout << msgStruct.input.size << std::endl;
+    if (auto benchmarkInput = msgStruct.benchmarkInput) {
+        std::cout << benchmarkInput->dynamic.has_value() << std::endl;
+        std::cout << *benchmarkInput->dynamic <<  std::endl;
+        std::cout << benchmarkInput->threadCount.has_value() << std::endl;
+        std::cout << *benchmarkInput->threadCount <<  std::endl;
+    }
+    // std::cout << msgStruct.input.grid << std::endl;
 }

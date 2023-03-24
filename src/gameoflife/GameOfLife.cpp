@@ -56,13 +56,17 @@ namespace {
         grid = newGrid;
     }
 
-    void padGrid(int size, const std::vector<Cell>& grid, std::vector<Cell>& paddedGrid) {
+    void flattenAndPadGrid(
+        int size,
+        const std::vector<std::vector<Cell>>& grid,
+        std::vector<Cell>& paddedGrid
+    ) {
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             for (auto j = 0; j < size; ++j) {
-                auto pos = (i * size) + j;
+                // auto pos = (i * size) + j;
                 auto padPos = startIndex + j;
-                paddedGrid[padPos] = grid[pos];
+                paddedGrid[padPos] = grid[i][j];
             }
         }
     }
@@ -91,7 +95,7 @@ namespace GameOfLife {
 
         for (auto i = 0; i < iterations; ++i) {
             std::vector<Cell> paddedGrid((size+2)*(size+2), DEAD);
-            padGrid(size, grid, paddedGrid);
+            flattenAndPadGrid(size, grid, paddedGrid);
 
             auto start = std::chrono::high_resolution_clock::now();
             for (auto g = 0; g < generations; ++g) {

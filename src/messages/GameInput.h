@@ -5,13 +5,12 @@
 #ifndef PPR_GAME_OF_LIFE_GAMEINPUT_H
 #define PPR_GAME_OF_LIFE_GAMEINPUT_H
 
-#include <vector>
 #include "../global.h"
 
 namespace GameOfLife {
     struct GameInput {
         int size;
-        std::vector<Cell> grid;
+        std::vector<std::vector<Cell>> grid;
     };
 }
 

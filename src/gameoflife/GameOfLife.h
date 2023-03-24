@@ -12,8 +12,8 @@
 
 #include "../global.h"
 #include "benchmark/BenchmarkResult.h"
-#include "GameInput.h"
-#include "benchmark/BenchmarkInput.h"
+#include "../messages/GameInput.h"
+#include "../messages/BenchmarkInput.h"
 
 // class GameOfLife {
 // public:
@@ -50,9 +50,9 @@ namespace {
         std::vector<Cell>& newGrid
     );
 
-    void padGrid(
+    void flattenAndPadGrid(
         int size,
-        const std::vector<Cell>& grid,
+        const std::vector<std::vector<Cell>>& grid,
         std::vector<Cell>& paddedGrid
     );
 }
