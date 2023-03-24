@@ -145,10 +145,15 @@ int main() {
             }
             out << ";";
         }
-        send(socket, out.str());
-        auto response = read(socket);
-        if (response == "end!") return false;
-        return true;
+        try {
+            send(socket, out.str());
+            auto response = read(socket);
+            if (response == "end!") return false;
+            return true;
+        } catch (...) {
+            return false;
+        }
+
     };
 
     GameOfLife::run(msgStruct.input, socketCallback);

@@ -60,10 +60,7 @@ namespace {
     void swap(
         std::vector<Cell>& oldGrid,
         std::vector<Cell>& newGrid
-    ) {
-        oldGrid = newGrid;
-        std::fill(newGrid.begin(), newGrid.end(), DEAD);
-    }
+    );
 }
 
 namespace GameOfLife {

@@ -54,10 +54,6 @@ namespace {
                 toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
             }
         }
-
-        // Copy grid
-        // https://stackoverflow.com/a/644677
-        oldGrid = newGrid;
     }
 
     void flattenAndPadGrid(
@@ -73,6 +69,13 @@ namespace {
                 paddedGrid[padPos] = grid[i][j];
             }
         }
+    }
+
+    void swap(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid)  {
+        // Copy grid
+        // https://stackoverflow.com/a/644677
+        oldGrid = newGrid;
+        std::fill(newGrid.begin(), newGrid.end(), DEAD);
     }
 }
 
