@@ -11,6 +11,18 @@
 #include "asio.hpp"
 
 
+std::string read(asio::ip::tcp::socket& socket) {
+    asio::streambuf buf;
+    asio::read_until(socket, buf, "\n");
+    auto data = asio::buffer_cast<const char*>(buf.data());
+    return data;
+}
+
+void send(asio::ip::tcp::socket& socket, const std::string& message) {
+    const std::string terminatedMsg = message + "\n";
+    asio::write(socket, asio::buffer(terminatedMsg));
+}
+
 int main() {
 
     // https://www.geeksforgeeks.org/program-for-conways-game-of-life/
@@ -85,6 +97,20 @@ int main() {
 
     // https://www.codeproject.com/Articles/1264257/Socket-Programming-in-Cplusplus-using-boost-asio-T
     // https://sourceforge.net/projects/asio/files/asio/1.26.0%20%28Stable%29/asio-1.26.0.zip/download
-    asio::io_service kek;
-    std::cout << "kek";
+    asio::io_service ioService;
+    asio::ip::tcp::acceptor acceptor(
+        ioService,
+        asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 1234)
+    );
+    asio::ip::tcp::socket socket(ioService);
+
+    acceptor.accept(socket);
+
+    std::cout << "Sending msg to client" << std::endl;
+    send(socket, "Hey!");
+
+    std::cout << "Waiting for reply" << std::endl;
+    auto msg = read(socket);
+    std::cout << msg << std::endl;
+    socket.close();
 }
