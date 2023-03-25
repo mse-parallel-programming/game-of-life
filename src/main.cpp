@@ -118,6 +118,10 @@ int main() {
     std::cout << msg << std::endl;
 
 
+    auto test = std::map<int, std::vector<int>> { {0, {0, 1}}};
+    nlohmann::json test2(test);
+    std::cout << nlohmann::to_string(test2) << std::endl;
+
 
     nlohmann::json j = nlohmann::json::parse(msg);
     auto msgStruct = j.get<GameOfLife::StartMessage>();
@@ -149,10 +153,11 @@ int main() {
 
         auto updateMsg = GameOfLife::UpdateMessage::from(0, size, oldGrid, newGrid);
         nlohmann::json updateMsgJson = updateMsg;
-        std::cout << to_string(updateMsgJson) << std::endl;
+        std::cout << updateMsgJson.dump() << std::endl;
 
         try {
-            send(socket, out.str());
+            // send(socket, out.str());
+            send(socket, updateMsgJson.dump());
             auto response = read(socket);
             if (response == "end!") return false;
             return true;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ppr.messages.BenchmarkInput;
 import ppr.messages.GameInput;
 import ppr.messages.StartMessage;
+import ppr.messages.UpdateMessage;
 import ppr.util.Input;
 
 import java.io.BufferedReader;
@@ -69,8 +70,9 @@ public class Main {
             for(var i = 0; i < 10; ++i) {
                 var msg = in.readLine();
                 // TODO: Receive json diff
-                msg = msg.replaceAll(";", "\n");
-                System.out.println(msg);
+                // msg = msg.replaceAll(";", "\n");
+                var msgObj = objectMapper.readValue(msg, UpdateMessage.class);
+                System.out.println(msgObj.toString());
                 Thread.sleep(1500);
                 if ((i+1) == 10)
                     out.println("end!");
