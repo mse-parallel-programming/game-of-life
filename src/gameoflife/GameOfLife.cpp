@@ -2,6 +2,8 @@
 // Created by kurbaniec on 24.03.2023.
 //
 #include <omp.h>
+#include <sstream>
+#include <unordered_set>
 #include "GameOfLife.h"
 
 namespace {
@@ -21,7 +23,12 @@ namespace {
         return count;
     }
 
-    void toBeOrNotToBe(int pos, int aliveNeighbours, std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid) {
+    void toBeOrNotToBe(
+        int pos,
+        int aliveNeighbours,
+        std::vector<Cell>& oldGrid,
+        std::vector<Cell>& newGrid
+    ) {
         // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
         if (oldGrid[pos] == ALIVE) {
             // Any live cell with two or three live neighbours survives.
@@ -43,13 +50,25 @@ namespace {
     ) {
         // std::vector<Cell> newGrid(oldGrid.size(), DEAD);
 
+        // https://stackoverflow.com/q/9953905
+
+        std::unordered_set<int> wow;
+
         #pragma omp parallel for \
         schedule(static) \
-        default(none) firstprivate(size) shared(oldGrid, newGrid)
+        default(none) firstprivate(size) shared(std::cout, oldGrid, newGrid, wow)
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
+                #pragma omp critical
+                {
+                    if (wow.contains(pos)) {
+                        std::cout << pos << " arealdy used" << std::endl;
+                        throw std::runtime_error("hmm");
+                    }
+                    wow.emplace(pos);
+                };
                 auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
                 toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
             }
@@ -74,8 +93,12 @@ namespace {
     void swap(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid)  {
         // Copy grid
         // https://stackoverflow.com/a/644677
-        oldGrid = newGrid;
+        // oldGrid = newGrid;
+        oldGrid.swap(newGrid);
         std::fill(newGrid.begin(), newGrid.end(), DEAD);
+
+        auto sum = std::reduce(newGrid.begin(), newGrid.end()) / newGrid.size();
+        std::cout << "sum: " << sum << std::endl;
     }
 }
 
@@ -138,6 +161,19 @@ namespace GameOfLife {
         while(running) {
             nextGeneration(size, oldGrid, newGrid);
             running = callback(oldGrid, newGrid);
+
+            std::stringstream out;
+            for (auto i = 0; i < size; ++i) {
+                auto startIndex = size + 3 + (i * 2) + (i * size);
+                for (auto j = 0; j < size; ++j) {
+                    auto pos = startIndex + j;
+                    auto cell = newGrid[pos];
+                    out << cell << " ";
+                }
+                out << " \n";
+            }
+            std::cout << out.str() << std::endl;
+
             swap(oldGrid, newGrid);
         }
 

@@ -12,22 +12,25 @@
 #include "../global.h"
 
 namespace Util {
-    struct GameInput {
-    public:
-        int size;
-        std::vector<Cell> grid;
-    };
+    // struct GameInput {
+    // public:
+    //     int size;
+    //     std::vector<Cell> grid;
+    // };
 
-    static GameInput textInput(const std::string& textInput) {
+    static GameOfLife::GameInput textInput(const std::string& textInput) {
         auto size = sqrt((double)textInput.size());
         // Check if integer
         // https://stackoverflow.com/a/1521682
         double intPart;
         if (modf(size, &intPart) != 0.0)
             throw std::runtime_error("Input width / height are not equal");
+        auto intSize = (int)size;
 
         std::vector<char> rawInput(textInput.begin(), textInput.end());
-        // Transform input
+
+
+        /*// Transform input
         // https://stackoverflow.com/a/51075101
         std::vector<Cell> input;
         input.reserve(rawInput.size());
@@ -38,10 +41,27 @@ namespace Util {
                 return elem == '.' ? DEAD : ALIVE;
             });
 
-        return GameInput {(int) size, input };
+        return GameInput {(int) size, input };*/
+
+        std::vector<std::vector<Cell>> input;
+        input.reserve(intSize);
+        for (auto i = 0; i < intSize; ++i) {
+            std::vector<Cell> rowInput;
+            input.reserve(intSize);
+            for (auto j = 0; j < intSize; ++j) {
+                auto elem = rawInput[(i * intSize) + j];
+                if (elem == '.')
+                    rowInput.emplace_back(DEAD);
+                else
+                    rowInput.emplace_back(ALIVE);
+            }
+            input.emplace_back(rowInput);
+        }
+
+        return GameOfLife::GameInput { intSize, input };
     }
 
-    static GameInput randomInput(int size, double alivePercentage) {
+    /*static GameInput randomInput(int size, double alivePercentage) {
         int length = size*size;
         std::vector<Cell> input(length, DEAD);
 
@@ -53,7 +73,7 @@ namespace Util {
         }
 
         return GameInput { size, input };
-    }
+    }*/
 }
 
 #endif //PPR_GAME_OF_LIFE_INPUT_H

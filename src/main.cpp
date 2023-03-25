@@ -39,21 +39,23 @@ int main() {
     //                         ".........."
     //                         ".........."
     //                         "..........";
-    // std::string textInput = ".........."
-    //                         "...**....."
-    //                         "....*....."
-    //                         ".........."
-    //                         ".........."
-    //                         "...**....."
-    //                         "..**......"
-    //                         ".....*...."
-    //                         "....*....."
-    //                         "..........";
+    std::string textInput = ".........."
+                            "...**....."
+                            "....*....."
+                            ".........."
+                            ".........."
+                            "...**....."
+                            "..**......"
+                            ".....*...."
+                            "....*....."
+                            "..........";
     // std::string textInput = "..."
     //                         ".*."
     //                         "...";
 
-    // auto input = Util::textInput(textInput);
+    const auto input = Util::textInput(textInput);
+    auto size = input.size;
+
 
     // auto input = Util::randomInput(512, 0.25);
     // auto size = input.size;
@@ -101,7 +103,7 @@ int main() {
     // https://www.codeproject.com/Articles/1264257/Socket-Programming-in-Cplusplus-using-boost-asio-T
     // https://sourceforge.net/projects/asio/files/asio/1.26.0%20%28Stable%29/asio-1.26.0.zip/download
     // https://stackoverflow.com/a/75828304
-    asio::io_service ioService;
+    /*asio::io_service ioService;
     asio::ip::tcp::acceptor acceptor(
         ioService,
         asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 1234)
@@ -167,9 +169,36 @@ int main() {
             return false;
         }
 
+    };*/
+
+    // GameOfLife::run(msgStruct.input, socketCallback);
+    // socket.close();
+
+    std::cout << size << std::endl;
+
+    auto iterations = 0;
+    auto printCallback = [size, &iterations](
+        std::vector<Cell>& oldGrid,
+        std::vector<Cell>& newGrid
+    ) {
+        // std::stringstream out;
+        // for (auto i = 0; i < size; ++i) {
+        //     auto startIndex = size + 3 + (i * 2) + (i * size);
+        //     for (auto j = 0; j < size; ++j) {
+        //         auto pos = startIndex + j;
+        //         auto cell = newGrid[pos];
+        //         out << cell << " ";
+        //     }
+        //     out << " \n";
+        // }
+        // std::cout << out.str() << std::endl;
+
+        ++iterations;
+        if (iterations == 10) return false;
+        return true;
     };
+    GameOfLife::run(input, printCallback);
 
-    GameOfLife::run(msgStruct.input, socketCallback);
 
-    socket.close();
+
 }
