@@ -48,14 +48,17 @@ namespace {
         std::vector<Cell>& oldGrid,
         std::vector<Cell>& newGrid
     ) {
-        // std::vector<Cell> newGrid(oldGrid.size(), DEAD);
-
-        // https://stackoverflow.com/q/9953905
-
-        // std::unordered_set<int> wow;
-
-        // This could be it ...
+        // Alias `Cell` must not be of type `bool`!
+        // `std::vector<bool>` stores multiple values in 1 byte.
+        // Think about it like a compressed storage system, where every boolean value needs 1 bit.
+        // So, instead of having one element per memory block (one element per array cell),
+        // the memory layout may look like this:
+        //    std::vector<bool> v(20);
+        //    [ v[0], v[1], v[2],..., v[7] ][ v[8], v[9],..., v[15] ][ v[16], v[17], v[18], v[19] ]
+        // => Most efficient type that stores one element at each index seems `unsigned char` (1 byte)
+        // => How did was debugged? std::vector<bool> has no `data()` member to return pointer to first element
         // https://stackoverflow.com/a/46115714
+        // https://stackoverflow.com/a/32821197
 
         #pragma omp parallel for collapse(1) \
         schedule(static) \
@@ -170,7 +173,7 @@ namespace GameOfLife {
                 auto startIndex = size + 3 + (i * 2) + (i * size);
                 for (auto j = 0; j < size; ++j) {
                     auto pos = startIndex + j;
-                    auto cell = newGrid[pos];
+                    auto cell = static_cast<bool>(newGrid[pos]);
                     out << cell << " ";
                 }
                 out << " \n";
