@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Kacper Urbaniec
@@ -21,42 +22,48 @@ import java.util.List;
 public class Main {
     public static void main(String[] args) {
 
-        var textInput = ".........." +
-                "...**....." +
-                "....*....." +
-                ".........." +
-                ".........." +
-                "...**....." +
-                "..**......" +
-                ".....*...." +
-                "....*....." +
-                "..........";
-        var size = 10;
-        var grid = Input.textInput(textInput);
-
+        StartMessage start;
+        String startJson = "";
         var objectMapper = new ObjectMapper();
-        var startMsgObj = new StartMessage();
-        var input = new GameInput();
-        input.size = size;
-        input.grid = grid;
-        // var benchmarkInput = new BenchmarkInput();
-        // benchmarkInput.generations = 1000;
-        // benchmarkInput.iterations = 3;
-        // benchmarkInput.dynamic = true;
-        // benchmarkInput.threadCount = 12;
-        startMsgObj.input = input;
-        // startMsgObj.benchmarkInput = benchmarkInput;
+        {
+            var textInput = ".........." +
+                    "...**....." +
+                    "....*....." +
+                    ".........." +
+                    ".........." +
+                    "...**....." +
+                    "..**......" +
+                    ".....*...." +
+                    "....*....." +
+                    "..........";
+            var size = 10;
+            var grid = Input.textInput(textInput);
 
-        String startMsg = "";
-        try {
-            startMsg = objectMapper.writeValueAsString(startMsgObj);
-            System.out.println(startMsg);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            start = new StartMessage();
+            var input = new GameInput();
+            input.size = size;
+            input.grid = grid;
+            // var benchmarkInput = new BenchmarkInput();
+            // benchmarkInput.generations = 1000;
+            // benchmarkInput.iterations = 3;
+            // benchmarkInput.dynamic = true;
+            // benchmarkInput.threadCount = 12;
+            start.input = input;
+            // startMsgObj.benchmarkInput = benchmarkInput;
+
+
+            try {
+                startJson = objectMapper.writeValueAsString(start);
+                System.out.println(startJson);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
+
 
         String hostname = "localhost";
         int portNumber = 1234;
+        var grid = start.input.grid;
         try (
                 var socket = new Socket(hostname, portNumber);
                 var out = new PrintWriter(socket.getOutputStream(), true);
@@ -64,17 +71,32 @@ public class Main {
         ) {
             var initialMsg = in.readLine();
             System.out.println(initialMsg);
-            out.println(startMsg);
+            out.println(startJson);
 
             // TODO: exit? error handling?
-            for(var i = 0; i < 10; ++i) {
-                var msg = in.readLine();
-                // TODO: Receive json diff
-                // msg = msg.replaceAll(";", "\n");
-                var msgObj = objectMapper.readValue(msg, UpdateMessage.class);
-                System.out.println(msgObj.toString());
+            for (var i = 0; i < 10; ++i) {
+                // var test = in.readLine();
+                // test = test.replaceAll(";", "\n");
+                // System.out.println(test);
+
+                var updateJson = in.readLine();
+                var update = objectMapper.readValue(updateJson, UpdateMessage.class);
+                // System.out.println(update.toString());
+                update.updateGrid(grid);
+                String gridString = grid.stream()
+                        .map(n -> n
+                                .stream()
+                                .map(n2 -> {
+                                    if (n2) return "1";
+                                    else return "0";
+                                })
+                                .collect(Collectors.joining(" ", "", "\n"))
+                        )
+                        .collect(Collectors.joining(""));
+                System.out.println(gridString);
+
                 Thread.sleep(1500);
-                if ((i+1) == 10)
+                if ((i + 1) == 10)
                     out.println("end!");
                 else
                     out.println("next!");

@@ -148,8 +148,10 @@ int main() {
                 auto cell = newGrid[pos];
                 out << cell << " ";
             }
-            out << ";";
+            out << "\n";
         }
+
+        std::cout << out.str() << std::endl;
 
         auto updateMsg = GameOfLife::UpdateMessage::from(0, size, oldGrid, newGrid);
         nlohmann::json updateMsgJson = updateMsg;

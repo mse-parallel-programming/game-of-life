@@ -1,4 +1,4 @@
-package ppr.messages;
+package ppr.messages.helper;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
