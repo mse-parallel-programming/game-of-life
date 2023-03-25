@@ -21,7 +21,7 @@ add_definitions(-DBOOST_ALL_NO_LIB)
 add_definitions(-D_WIN32_WINNT=0x0501)
 add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
 
-add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/sequential/GameOfLifeSeq.cpp src/sequential/GameOfLifeSeq.h src/gameoflife/GameOfLife.h src/util/Input.h src/parallel/GameOfLifePar.cpp src/parallel/GameOfLifePar.h src/gameoflife/benchmark/BenchmarkResult.h src/messages/BenchmarkInput.h src/messages/GameInput.h src/gameoflife/GameOfLife.cpp src/messages/StartMessage.h)
+add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/sequential/GameOfLifeSeq.cpp src/sequential/GameOfLifeSeq.h src/gameoflife/GameOfLife.h src/util/Input.h src/parallel/GameOfLifePar.cpp src/parallel/GameOfLifePar.h src/gameoflife/benchmark/BenchmarkResult.h src/messages/BenchmarkInput.h src/messages/GameInput.h src/gameoflife/GameOfLife.cpp src/messages/StartMessage.h src/messages/UpdateMessage.h)
 
 # OpenMP
 find_package(OpenMP)

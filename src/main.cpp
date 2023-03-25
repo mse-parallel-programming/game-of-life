@@ -11,6 +11,7 @@
 #include "asio.hpp"
 #include "json.hpp"
 #include "messages/StartMessage.h"
+#include "messages/UpdateMessage.h"
 
 
 std::string read(asio::ip::tcp::socket& socket) {
@@ -145,6 +146,11 @@ int main() {
             }
             out << ";";
         }
+
+        auto updateMsg = GameOfLife::UpdateMessage::from(0, size, oldGrid, newGrid);
+        nlohmann::json updateMsgJson = updateMsg;
+        std::cout << to_string(updateMsgJson) << std::endl;
+
         try {
             send(socket, out.str());
             auto response = read(socket);
