@@ -110,11 +110,12 @@ namespace GameOfLife {
         auto& grid = input.grid;
         auto generations = benchmarkInput.generations;
         auto iterations = benchmarkInput.iterations;
-        auto dynamic = benchmarkInput.dynamic;
-        auto threadCount = benchmarkInput.threadCount;
-
-        if (dynamic) omp_set_dynamic(*dynamic);
-        if (threadCount) omp_set_num_threads(*threadCount);
+        // TODO: ThreadConfig
+        // auto dynamic = benchmarkInput.dynamic;
+        // auto threadCount = benchmarkInput.threadCount;
+        //
+        // if (dynamic) omp_set_dynamic(*dynamic);
+        // if (threadCount) omp_set_num_threads(*threadCount);
 
         std::vector<std::chrono::duration<double, std::milli>> measurements;
         measurements.reserve(iterations);

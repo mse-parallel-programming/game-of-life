@@ -129,11 +129,15 @@ int main() {
     auto msgStruct = j.get<GameOfLife::StartMessage>();
 
     std::cout << msgStruct.input.size << std::endl;
+    // TODO: Start benchmark mode when benchmark input is not empty
     if (auto benchmarkInput = msgStruct.benchmarkInput) {
-        std::cout << benchmarkInput->dynamic.has_value() << std::endl;
-        std::cout << *benchmarkInput->dynamic << std::endl;
-        std::cout << benchmarkInput->threadCount.has_value() << std::endl;
-        std::cout << *benchmarkInput->threadCount << std::endl;
+        std::cout << benchmarkInput->iterations << std::endl;
+        std::cout << benchmarkInput->generations << std::endl;
+    }
+    // TODO: No thread config => use default, optimal values (dynamic=true, threadCount=enviroment.CoreCount)
+    if (auto threadConfig = msgStruct.threadConfig) {
+        std::cout << threadConfig->dynamic << std::endl;
+        std::cout << threadConfig->threadCount << std::endl;
     }
 
     auto size = msgStruct.input.size;

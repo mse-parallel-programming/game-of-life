@@ -13,5 +13,6 @@ import java.util.Optional;
 public class StartMessage {
 
     public GameInput input;
-    public BenchmarkInput benchmarkInput;
+    public BenchmarkInput benchmarkInput; // Nullable
+    public ThreadConfig threadConfig; // Nullable
 }

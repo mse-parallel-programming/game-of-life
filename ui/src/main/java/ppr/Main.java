@@ -97,6 +97,7 @@ public class Main {
                 System.out.println(gridString);
 
                 Thread.sleep(1500);
+                // TODO: Custom exchange JSON message
                 if ((i + 1) == 10)
                     out.println("end!");
                 else

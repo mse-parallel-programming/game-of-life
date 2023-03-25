@@ -10,6 +10,4 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class BenchmarkInput {
     public int iterations;
     public int generations;
-    public Boolean dynamic; // Nullable
-    public Integer threadCount; // Nullable
 }

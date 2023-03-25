@@ -10,10 +10,8 @@
 
 namespace GameOfLife {
     struct BenchmarkInput {
-        int iterations;
-        int generations;
-        std::optional<bool> dynamic;
-        std::optional<int> threadCount;
+        int iterations{};
+        int generations{};
     };
 }
 
