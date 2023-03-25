@@ -52,23 +52,26 @@ namespace {
 
         // https://stackoverflow.com/q/9953905
 
-        std::unordered_set<int> wow;
+        // std::unordered_set<int> wow;
 
-        #pragma omp parallel for \
+        // This could be it ...
+        // https://stackoverflow.com/a/46115714
+
+        #pragma omp parallel for collapse(1) \
         schedule(static) \
-        default(none) firstprivate(size) shared(std::cout, oldGrid, newGrid, wow)
+        default(none) firstprivate(size) shared(oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
-                #pragma omp critical
-                {
-                    if (wow.contains(pos)) {
-                        std::cout << pos << " arealdy used" << std::endl;
-                        throw std::runtime_error("hmm");
-                    }
-                    wow.emplace(pos);
-                };
+                // #pragma omp critical
+                // {
+                //     if (wow.contains(pos)) {
+                //         std::cout << pos << " arealdy used" << std::endl;
+                //         throw std::runtime_error("hmm");
+                //     }
+                //     wow.emplace(pos);
+                // };
                 auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
                 toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
             }
