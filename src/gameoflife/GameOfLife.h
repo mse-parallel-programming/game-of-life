@@ -57,7 +57,7 @@ namespace {
         std::vector<Cell>& paddedGrid
     );
 
-    void swap(
+    void swapAndResetNewGrid(
         std::vector<Cell>& oldGrid,
         std::vector<Cell>& newGrid
     );
@@ -68,6 +68,7 @@ namespace GameOfLife {
     void run(
         const GameInput& input,
         const std::function<bool(
+            int generation, int size,
             std::vector<Cell>& oldGrid,
             std::vector<Cell>& newGrid
         )>& callback

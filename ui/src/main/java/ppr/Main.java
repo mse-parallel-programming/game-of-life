@@ -93,6 +93,7 @@ public class Main {
                                 .collect(Collectors.joining(" ", "", "\n"))
                         )
                         .collect(Collectors.joining(""));
+                System.out.println(update.generation);
                 System.out.println(gridString);
 
                 Thread.sleep(1500);
@@ -105,7 +106,5 @@ public class Main {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
-        System.out.println("Hello world!");
     }
 }

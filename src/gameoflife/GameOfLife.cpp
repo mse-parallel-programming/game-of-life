@@ -59,6 +59,10 @@ namespace {
         // => How did was debugged? std::vector<bool> has no `data()` member to return pointer to first element
         // https://stackoverflow.com/a/46115714
         // https://stackoverflow.com/a/32821197
+        // But generally it is save to write to vectors from multiple threads
+        // unless no resizing is made
+        // https://stackoverflow.com/a/9954045
+        // https://stackoverflow.com/a/2951386
 
         #pragma omp parallel for collapse(1) \
         schedule(static) \
@@ -67,14 +71,6 @@ namespace {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
-                // #pragma omp critical
-                // {
-                //     if (wow.contains(pos)) {
-                //         std::cout << pos << " arealdy used" << std::endl;
-                //         throw std::runtime_error("hmm");
-                //     }
-                //     wow.emplace(pos);
-                // };
                 auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
                 toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
             }
@@ -96,15 +92,9 @@ namespace {
         }
     }
 
-    void swap(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid)  {
-        // Copy grid
-        // https://stackoverflow.com/a/644677
-        // oldGrid = newGrid;
+    void swapAndResetNewGrid(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid)  {
         oldGrid.swap(newGrid);
         std::fill(newGrid.begin(), newGrid.end(), DEAD);
-
-        auto sum = std::reduce(newGrid.begin(), newGrid.end()) / newGrid.size();
-        std::cout << "sum: " << sum << std::endl;
     }
 }
 
@@ -138,7 +128,7 @@ namespace GameOfLife {
             auto start = std::chrono::high_resolution_clock::now();
             for (auto g = 0; g < generations; ++g) {
                 nextGeneration(size, oldGrid, newGrid);
-                swap(oldGrid, newGrid);
+                swapAndResetNewGrid(oldGrid, newGrid);
             }
             auto end = std::chrono::high_resolution_clock::now();
 
@@ -152,6 +142,7 @@ namespace GameOfLife {
     void run(
         const GameInput& input,
         const std::function<bool(
+            int generation, int size,
             std::vector<Cell>& oldGrid,
             std::vector<Cell>& newGrid
         )>& callback
@@ -164,23 +155,12 @@ namespace GameOfLife {
         std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
 
         auto running = true;
+        auto generation = 0;
         while(running) {
+            ++generation;
             nextGeneration(size, oldGrid, newGrid);
-            running = callback(oldGrid, newGrid);
-
-            std::stringstream out;
-            for (auto i = 0; i < size; ++i) {
-                auto startIndex = size + 3 + (i * 2) + (i * size);
-                for (auto j = 0; j < size; ++j) {
-                    auto pos = startIndex + j;
-                    auto cell = static_cast<bool>(newGrid[pos]);
-                    out << cell << " ";
-                }
-                out << " \n";
-            }
-            std::cout << out.str() << std::endl;
-
-            swap(oldGrid, newGrid);
+            running = callback(generation, size, oldGrid, newGrid);
+            swapAndResetNewGrid(oldGrid, newGrid);
         }
 
     }

@@ -22628,7 +22628,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     }
 
     /// @brief exchanges the values
-    /// @sa https://json.nlohmann.me/api/basic_json/swap/
+    /// @sa https://json.nlohmann.me/api/basic_json/swapAndResetNewGrid/
     void swap(reference other) noexcept (
         std::is_nothrow_move_constructible<value_t>::value&&
         std::is_nothrow_move_assignable<value_t>::value&&
@@ -22645,7 +22645,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     }
 
     /// @brief exchanges the values
-    /// @sa https://json.nlohmann.me/api/basic_json/swap/
+    /// @sa https://json.nlohmann.me/api/basic_json/swapAndResetNewGrid/
     friend void swap(reference left, reference right) noexcept (
         std::is_nothrow_move_constructible<value_t>::value&&
         std::is_nothrow_move_assignable<value_t>::value&&
@@ -22657,7 +22657,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     }
 
     /// @brief exchanges the values
-    /// @sa https://json.nlohmann.me/api/basic_json/swap/
+    /// @sa https://json.nlohmann.me/api/basic_json/swapAndResetNewGrid/
     void swap(array_t& other) // NOLINT(bugprone-exception-escape)
     {
         // swap only works for arrays
@@ -22668,12 +22668,12 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         }
         else
         {
-            JSON_THROW(type_error::create(310, detail::concat("cannot use swap(array_t&) with ", type_name()), this));
+            JSON_THROW(type_error::create(310, detail::concat("cannot use swapAndResetNewGrid(array_t&) with ", type_name()), this));
         }
     }
 
     /// @brief exchanges the values
-    /// @sa https://json.nlohmann.me/api/basic_json/swap/
+    /// @sa https://json.nlohmann.me/api/basic_json/swapAndResetNewGrid/
     void swap(object_t& other) // NOLINT(bugprone-exception-escape)
     {
         // swap only works for objects
@@ -22684,12 +22684,12 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         }
         else
         {
-            JSON_THROW(type_error::create(310, detail::concat("cannot use swap(object_t&) with ", type_name()), this));
+            JSON_THROW(type_error::create(310, detail::concat("cannot use swapAndResetNewGrid(object_t&) with ", type_name()), this));
         }
     }
 
     /// @brief exchanges the values
-    /// @sa https://json.nlohmann.me/api/basic_json/swap/
+    /// @sa https://json.nlohmann.me/api/basic_json/swapAndResetNewGrid/
     void swap(string_t& other) // NOLINT(bugprone-exception-escape)
     {
         // swap only works for strings
@@ -22700,12 +22700,12 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         }
         else
         {
-            JSON_THROW(type_error::create(310, detail::concat("cannot use swap(string_t&) with ", type_name()), this));
+            JSON_THROW(type_error::create(310, detail::concat("cannot use swapAndResetNewGrid(string_t&) with ", type_name()), this));
         }
     }
 
     /// @brief exchanges the values
-    /// @sa https://json.nlohmann.me/api/basic_json/swap/
+    /// @sa https://json.nlohmann.me/api/basic_json/swapAndResetNewGrid/
     void swap(binary_t& other) // NOLINT(bugprone-exception-escape)
     {
         // swap only works for strings
@@ -22716,12 +22716,12 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         }
         else
         {
-            JSON_THROW(type_error::create(310, detail::concat("cannot use swap(binary_t&) with ", type_name()), this));
+            JSON_THROW(type_error::create(310, detail::concat("cannot use swapAndResetNewGrid(binary_t&) with ", type_name()), this));
         }
     }
 
     /// @brief exchanges the values
-    /// @sa https://json.nlohmann.me/api/basic_json/swap/
+    /// @sa https://json.nlohmann.me/api/basic_json/swapAndResetNewGrid/
     void swap(typename binary_t::container_type& other) // NOLINT(bugprone-exception-escape)
     {
         // swap only works for strings
@@ -22732,7 +22732,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         }
         else
         {
-            JSON_THROW(type_error::create(310, detail::concat("cannot use swap(binary_t::container_type&) with ", type_name()), this));
+            JSON_THROW(type_error::create(310, detail::concat("cannot use swapAndResetNewGrid(binary_t::container_type&) with ", type_name()), this));
         }
     }
 
