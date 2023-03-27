@@ -74,14 +74,12 @@ public class Main {
 
             // TODO: exit? error handling?
             for (var i = 0; i < 10; ++i) {
-                // var test = in.readLine();
-                // test = test.replaceAll(";", "\n");
-                // System.out.println(test);
-
+                // Get diff
                 var updateJson = in.readLine();
                 var update = objectMapper.readValue(updateJson, UpdateMessage.class);
-                // System.out.println(update.toString());
+
                 update.updateGrid(grid);
+                // Visualize grid
                 String gridString = grid.stream()
                         .map(n -> n
                                 .stream()
@@ -95,12 +93,14 @@ public class Main {
                 System.out.println(update.generation);
                 System.out.println(gridString);
 
+                // Wait for a bit
                 Thread.sleep(500);
-                // TODO: Custom exchange JSON message
-                if ((i + 1) == 10)
-                    out.println("end!");
-                else
-                    out.println("next!");
+
+                // Send if processing should continue or not
+                boolean next = (i + 1) != 10;
+                var ackMessage = new UpdateAckMessage(next);
+                var ackMessageJson = objectMapper.writeValueAsString(ackMessage);
+                out.println(ackMessageJson);
             }
 
         } catch (Exception ex) {

@@ -21,7 +21,7 @@ add_definitions(-DBOOST_ALL_NO_LIB)
 add_definitions(-D_WIN32_WINNT=0x0501)
 add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
 
-add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/gameoflife/GameOfLife.h src/util/Input.h src/gameoflife/types/BenchmarkResult.h src/gameoflife/types/BenchmarkInput.h src/gameoflife/types/GameInput.h src/gameoflife/GameOfLife.cpp src/messages/Start.h src/messages/Update.h src/gameoflife/types/ThreadConfig.h src/server/Server.cpp src/server/Server.h src/messages/Update.cpp src/messages/Start.cpp src/benchmark/Benchmark.cpp src/benchmark/Benchmark.h src/util/Parse.h)
+add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/gameoflife/GameOfLife.h src/util/Input.h src/gameoflife/types/BenchmarkResult.h src/gameoflife/types/BenchmarkInput.h src/gameoflife/types/GameInput.h src/gameoflife/GameOfLife.cpp src/messages/Start.h src/messages/Update.h src/gameoflife/types/ThreadConfig.h src/server/Server.cpp src/server/Server.h src/messages/Update.cpp src/messages/Start.cpp src/benchmark/Benchmark.cpp src/benchmark/Benchmark.h src/util/Parse.h src/messages/UpdateAck.cpp src/messages/UpdateAck.h)
 
 # OpenMP
 find_package(OpenMP)

@@ -19,16 +19,6 @@ namespace Message {
         std::optional<GameOfLife::BenchmarkInput> benchmarkInput;
     };
 
-
-    // void to_json(json& j, const StartMessage& msg) {
-    //     j = json{
-    //         {"input", {
-    //             {}
-    //         }},
-    //         {"benchmarkInput", msg.benchmarkInput}
-    //     };
-    // }
-
     void from_json(const json&j, Start& msg);
 }
 

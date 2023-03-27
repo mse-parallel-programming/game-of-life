@@ -7,6 +7,7 @@
 #include "../messages/Start.h"
 #include "../messages/Update.h"
 #include "../gameoflife/GameOfLife.h"
+#include "../messages/UpdateAck.h"
 
 namespace {
     void signalHandler(int signal) {
@@ -82,9 +83,9 @@ namespace Server {
 
                 try {
                     send(socket, updateMsgJson.dump());
-                    auto response = read(socket);
-                    if (response == "end!\r\n") return false;
-                    return true;
+                    auto responseJson = read(socket);
+                    auto response = json::parse(responseJson).get<Message::UpdateAck>();
+                    return response.next;
                 } catch (...) {
                     return false;
                 }

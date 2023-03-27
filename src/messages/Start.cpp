@@ -23,10 +23,6 @@ namespace Message {
             auto benchmarkInput = j["benchmarkInput"];
             benchmarkInput.at("iterations").get_to(msg.benchmarkInput->iterations);
             benchmarkInput.at("generations").get_to(msg.benchmarkInput->generations);
-            // if (benchmarkInput.contains("dynamic"))
-            //     msg.benchmarkInput->dynamic = benchmarkInput["dynamic"].get<bool>();
-            // if (benchmarkInput.contains("threadCount"))
-            //     msg.benchmarkInput->threadCount = benchmarkInput["threadCount"].get<int>();
         } else {
             msg.benchmarkInput = std::nullopt;
         }
