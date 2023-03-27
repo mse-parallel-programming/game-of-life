@@ -14,6 +14,7 @@
 #include "types/BenchmarkResult.h"
 #include "types/GameInput.h"
 #include "types/BenchmarkInput.h"
+#include "types/ThreadConfig.h"
 
 // class GameOfLife {
 // public:
@@ -33,6 +34,8 @@
 // };
 
 namespace {
+    void configureOpenMp(const std::optional<GameOfLife::ThreadConfig>& threadConfig);
+
     void nextGeneration(
         int size,
         std::vector<Cell>& oldGrid,
@@ -67,6 +70,7 @@ namespace GameOfLife {
 
     void run(
         const GameInput& input,
+        const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
             std::vector<Cell>& oldGrid,

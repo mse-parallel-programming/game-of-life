@@ -190,6 +190,5 @@ int main() {
     };
     GameOfLife::run(input, printCallback);*/
 
-
     Server::run(1234);
 }

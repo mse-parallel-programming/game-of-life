@@ -1,10 +1,7 @@
 package ppr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ppr.messages.BenchmarkInput;
-import ppr.messages.GameInput;
-import ppr.messages.StartMessage;
-import ppr.messages.UpdateMessage;
+import ppr.messages.*;
 import ppr.util.Input;
 
 import java.io.BufferedReader;
@@ -51,6 +48,10 @@ public class Main {
             start.input = input;
             // startMsgObj.benchmarkInput = benchmarkInput;
 
+            // var threadConfig = new ThreadConfig();
+            // threadConfig.dynamic = false;
+            // threadConfig.threadCount = 1;
+            // start.threadConfig = threadConfig;
 
             try {
                 startJson = objectMapper.writeValueAsString(start);

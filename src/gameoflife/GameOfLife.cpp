@@ -4,9 +4,32 @@
 #include <omp.h>
 #include <sstream>
 #include <unordered_set>
+#include <thread>
 #include "GameOfLife.h"
 
 namespace {
+
+    void configureOpenMp(
+        const std::optional<GameOfLife::ThreadConfig>& threadConfig
+    ) {
+        bool dynamic;
+        int threadCount;
+
+        if (threadConfig) {
+            dynamic = threadConfig->dynamic;
+            threadCount = threadConfig->threadCount;
+        } else {
+            dynamic = true;
+            threadCount= (int) std::thread::hardware_concurrency();
+        }
+
+        // https://stackoverflow.com/a/11096742
+        omp_set_dynamic(dynamic);
+        omp_set_num_threads(threadCount);
+
+        std::cout << "  OpenMP Dynamic: " << dynamic << std::endl;
+        std::cout << "  OpenMP Thread Count : " << threadCount << std::endl;
+    }
 
     int neighbourCount(int pos, int size, std::vector<Cell>& grid) {
         int count = 0;
@@ -142,14 +165,21 @@ namespace GameOfLife {
 
     void run(
         const GameInput& input,
+        const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
             std::vector<Cell>& oldGrid,
             std::vector<Cell>& newGrid
         )>& callback
     ) {
+        std::cout << "Game of Life" << std::endl;
+
         auto size = input.size;
         auto& grid = input.grid;
+        std::cout << "Parameters:  " << std::endl;
+        std::cout << "  Size: " << size << std::endl;
+
+        configureOpenMp(threadConfig);
 
         std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
         flattenAndPadGrid(size, grid, oldGrid);

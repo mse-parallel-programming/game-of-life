@@ -30,6 +30,9 @@ namespace {
 
 namespace Server {
     void run(int port) {
+        std::cout << "Starting Game of Life server..." << std::endl;
+        std::cout << "Running on port... " << port << std::endl;
+
         // Shutdown handler
         // https://stackoverflow.com/a/48164204
         std::signal(SIGINT, signalHandler);
@@ -47,21 +50,19 @@ namespace Server {
 
         auto listening = true;
         shutdownHandler = std::make_optional([&listening, &socket, &acceptor](int signal) {
-            std::cout << "hey" << std::endl;
             listening = false;
             acceptor.close();
             socket.close();
-            std::cout << "hey2" << std::endl;
+            std::cout << "Initiating shutdown..." << std::endl;
         });
 
         while (listening) {
-            std::cout << "a1" << std::endl;
+            std::cout << std::endl << "Waiting for new connection..." << std::endl;
             try {
                 acceptor.accept(socket);
             } catch (...) {
                 continue;
             }
-            std::cout << "a2" << std::endl;
 
             auto startMsg = read(socket);
             auto start = json::parse(startMsg).get<Message::Start>();
@@ -70,11 +71,6 @@ namespace Server {
             if (auto benchmarkInput = start.benchmarkInput) {
                 std::cout << benchmarkInput->iterations << std::endl;
                 std::cout << benchmarkInput->generations << std::endl;
-            }
-            // TODO: No thread config => use default, optimal values (dynamic=true, threadCount=enviroment.CoreCount)
-            if (auto threadConfig = start.threadConfig) {
-                std::cout << threadConfig->dynamic << std::endl;
-                std::cout << threadConfig->threadCount << std::endl;
             }
 
             auto socketCallback = [&socket](
@@ -96,9 +92,11 @@ namespace Server {
                 }
             };
 
-            GameOfLife::run(start.input, socketCallback);
+            GameOfLife::run(start.input, start.threadConfig, socketCallback);
 
             socket.close();
         }
+
+        std::cout << "Bye!" << std::endl;
     }
 }
