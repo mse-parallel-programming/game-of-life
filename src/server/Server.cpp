@@ -10,9 +10,7 @@
 
 namespace {
     void signalHandler(int signal) {
-        std::cout << "signalHandler" << std::endl;
         if (shutdownHandler) (*shutdownHandler)(signal);
-        std::cout << "signalHandler2" << std::endl;
     }
 
     std::string read(asio::ip::tcp::socket& socket) {

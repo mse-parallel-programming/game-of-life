@@ -11,9 +11,9 @@
 namespace Benchmark {
 
     void localBenchmark(
-        int iterations,
-        int generations,
         int size,
+        int generations,
+        int iterations,
         const std::vector<int>& threads
     );
 

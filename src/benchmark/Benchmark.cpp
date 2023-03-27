@@ -8,9 +8,9 @@
 
 namespace Benchmark {
     void localBenchmark(
-        int iterations,
-        int generations,
         int size,
+        int generations,
+        int iterations,
         const std::vector<int>& threads
     ) {
         auto input = Util::randomInput(size, 0.25);
@@ -26,12 +26,12 @@ namespace Benchmark {
         std::cout << "Warmup" << std::endl;
         // Disable output
         // https://stackoverflow.com/a/30185095
-        // std::cout.setstate(std::ios_base::failbit);
+        std::cout.setstate(std::ios_base::failbit);
         GameOfLife::benchmark(
             input, std::nullopt,
             warmupBenchmarkInput
         );
-        // std::cout.clear();
+        std::cout.clear();
         std::cout << "Warmup completed" << std::endl << std::endl;
 
         // Benchmark
