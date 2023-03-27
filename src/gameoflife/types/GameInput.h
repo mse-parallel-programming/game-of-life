@@ -5,7 +5,7 @@
 #ifndef PPR_GAME_OF_LIFE_GAMEINPUT_H
 #define PPR_GAME_OF_LIFE_GAMEINPUT_H
 
-#include "../global.h"
+#include "../../global.h"
 
 namespace GameOfLife {
     struct GameInput {

@@ -2,18 +2,18 @@
 // Created by kurbaniec on 24.03.2023.
 //
 
-#ifndef PPR_GAME_OF_LIFE_STARTMESSAGE_H
-#define PPR_GAME_OF_LIFE_STARTMESSAGE_H
+#ifndef PPR_GAME_OF_LIFE_START_H
+#define PPR_GAME_OF_LIFE_START_H
 
-#include "GameInput.h"
-#include "BenchmarkInput.h"
+#include "../gameoflife/types/GameInput.h"
+#include "../gameoflife/types/BenchmarkInput.h"
 #include "json.hpp"
-#include "ThreadConfig.h"
+#include "../gameoflife/types/ThreadConfig.h"
 
 using json = nlohmann::json;
 
-namespace GameOfLife {
-    struct StartMessage {
+namespace Message {
+    struct Start {
         GameOfLife::GameInput input;
         std::optional<GameOfLife::ThreadConfig> threadConfig;
         std::optional<GameOfLife::BenchmarkInput> benchmarkInput;
@@ -29,20 +29,20 @@ namespace GameOfLife {
     //     };
     // }
 
-    void from_json(const json&j, StartMessage& msg) {
+    void from_json(const json&j, Start& msg) {
         auto input = j["input"];
         input.at("size").get_to(msg.input.size);
         input.at("grid").get_to(msg.input.grid);
 
         if (j.contains("threadConfig")) {
-            msg.threadConfig = ThreadConfig {};
+            msg.threadConfig = GameOfLife::ThreadConfig {};
             auto threadConfig = j["threadConfig"];
             threadConfig.at("dynamic").get_to(msg.threadConfig->dynamic);
             threadConfig.at("threadCount").get_to(msg.threadConfig->threadCount);
         }
 
         if (j.contains("benchmarkInput")) {
-            msg.benchmarkInput = BenchmarkInput {};
+            msg.benchmarkInput = GameOfLife::BenchmarkInput {};
             auto benchmarkInput = j["benchmarkInput"];
             benchmarkInput.at("iterations").get_to(msg.benchmarkInput->iterations);
             benchmarkInput.at("generations").get_to(msg.benchmarkInput->generations);
@@ -60,4 +60,4 @@ namespace GameOfLife {
 }
 
 
-#endif //PPR_GAME_OF_LIFE_STARTMESSAGE_H
+#endif //PPR_GAME_OF_LIFE_START_H

@@ -11,9 +11,9 @@
 #include <chrono>
 
 #include "../global.h"
-#include "benchmark/BenchmarkResult.h"
-#include "../messages/GameInput.h"
-#include "../messages/BenchmarkInput.h"
+#include "types/BenchmarkResult.h"
+#include "types/GameInput.h"
+#include "types/BenchmarkInput.h"
 
 // class GameOfLife {
 // public:

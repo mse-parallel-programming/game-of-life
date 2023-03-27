@@ -5,13 +5,11 @@
 #include <thread>
 #include "global.h"
 #include "gameoflife/GameOfLife.h"
-#include "sequential/GameOfLifeSeq.h"
 #include "util/input.h"
-#include "parallel/GameOfLifePar.h"
 #include "asio.hpp"
 #include "json.hpp"
-#include "messages/StartMessage.h"
-#include "messages/UpdateMessage.h"
+#include "messages/Start.h"
+#include "messages/Update.h"
 
 
 std::string read(asio::ip::tcp::socket& socket) {
@@ -126,7 +124,7 @@ int main() {
 
 
     nlohmann::json j = nlohmann::json::parse(msg);
-    auto msgStruct = j.get<GameOfLife::StartMessage>();
+    auto msgStruct = j.get<Message::Start>();
 
     std::cout << msgStruct.input.size << std::endl;
     // TODO: Start benchmark mode when benchmark input is not empty
@@ -146,7 +144,7 @@ int main() {
         std::vector<Cell>& oldGrid,
         std::vector<Cell>& newGrid
     ) {
-        auto updateMsg = GameOfLife::UpdateMessage::from(generation, size, oldGrid, newGrid);
+        auto updateMsg = Message::Update::from(generation, size, oldGrid, newGrid);
         nlohmann::json updateMsgJson = updateMsg;
         std::cout << updateMsgJson.dump() << std::endl;
 

@@ -2,8 +2,8 @@
 // Created by kurbaniec on 25.03.2023.
 //
 
-#ifndef PPR_GAME_OF_LIFE_UPDATEMESSAGE_H
-#define PPR_GAME_OF_LIFE_UPDATEMESSAGE_H
+#ifndef PPR_GAME_OF_LIFE_UPDATE_H
+#define PPR_GAME_OF_LIFE_UPDATE_H
 
 #include <map>
 #include <vector>
@@ -12,12 +12,12 @@
 
 using json = nlohmann::json;
 
-namespace GameOfLife {
-    struct UpdateMessage {
+namespace Message {
+    struct Update {
         int generation;
         std::map<int, std::vector<int>> diff;
 
-        static UpdateMessage from(
+        static Update from(
             int generation,
             int size,
             const std::vector<Cell>& oldGrid,
@@ -35,11 +35,11 @@ namespace GameOfLife {
                 if (!rowDiff.empty())
                     diff[i] = rowDiff;
             }
-            return UpdateMessage{generation, diff};
+            return Update{generation, diff};
         }
     };
 
-    void to_json(json& j, const UpdateMessage& msg) {
+    void to_json(json& j, const Update& msg) {
         j = json{
             {"generation", msg.generation},
             {"diff",       msg.diff}
@@ -47,4 +47,4 @@ namespace GameOfLife {
     }
 }
 
-#endif //PPR_GAME_OF_LIFE_UPDATEMESSAGE_H
+#endif //PPR_GAME_OF_LIFE_UPDATE_H
