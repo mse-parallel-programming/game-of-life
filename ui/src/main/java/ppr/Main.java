@@ -69,8 +69,6 @@ public class Main {
                 var out = new PrintWriter(socket.getOutputStream(), true);
                 var in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
         ) {
-            var initialMsg = in.readLine();
-            System.out.println(initialMsg);
             out.println(startJson);
 
             // TODO: exit? error handling?
@@ -96,7 +94,7 @@ public class Main {
                 System.out.println(update.generation);
                 System.out.println(gridString);
 
-                Thread.sleep(1500);
+                Thread.sleep(500);
                 // TODO: Custom exchange JSON message
                 if ((i + 1) == 10)
                     out.println("end!");

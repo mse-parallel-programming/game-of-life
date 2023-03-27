@@ -10,9 +10,10 @@
 #include "json.hpp"
 #include "messages/Start.h"
 #include "messages/Update.h"
+#include "server/Server.h"
 
 
-std::string read(asio::ip::tcp::socket& socket) {
+/*std::string read(asio::ip::tcp::socket& socket) {
     asio::streambuf buf;
     asio::read_until(socket, buf, "\n");
     auto data = asio::buffer_cast<const char*>(buf.data());
@@ -22,7 +23,9 @@ std::string read(asio::ip::tcp::socket& socket) {
 void send(asio::ip::tcp::socket& socket, const std::string& message) {
     const std::string terminatedMsg = message + "\n";
     asio::write(socket, asio::buffer(terminatedMsg));
-}
+}*/
+
+
 
 int main() {
 
@@ -101,7 +104,7 @@ int main() {
     // https://www.codeproject.com/Articles/1264257/Socket-Programming-in-Cplusplus-using-boost-asio-T
     // https://sourceforge.net/projects/asio/files/asio/1.26.0%20%28Stable%29/asio-1.26.0.zip/download
     // https://stackoverflow.com/a/75828304
-    asio::io_service ioService;
+    /*asio::io_service ioService;
     asio::ip::tcp::acceptor acceptor(
         ioService,
         asio::ip::tcp::endpoint(asio::ip::tcp::v4(), 1234)
@@ -160,7 +163,7 @@ int main() {
     };
 
     GameOfLife::run(msgStruct.input, socketCallback);
-    socket.close();
+    socket.close();*/
 
     /*std::cout << size << std::endl;
 
@@ -188,5 +191,5 @@ int main() {
     GameOfLife::run(input, printCallback);*/
 
 
-
+    Server::run(1234);
 }

@@ -6,6 +6,7 @@
 #define PPR_GAME_OF_LIFE_GAMEINPUT_H
 
 #include "../../global.h"
+#include <vector>
 
 namespace GameOfLife {
     struct GameInput {

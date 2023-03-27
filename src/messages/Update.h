@@ -39,12 +39,7 @@ namespace Message {
         }
     };
 
-    void to_json(json& j, const Update& msg) {
-        j = json{
-            {"generation", msg.generation},
-            {"diff",       msg.diff}
-        };
-    }
+    void to_json(json& j, const Update& msg);
 }
 
 #endif //PPR_GAME_OF_LIFE_UPDATE_H
