@@ -123,46 +123,6 @@ namespace {
 
 namespace GameOfLife {
 
-
-
-    BenchmarkResult benchmark(
-        const GameInput& input,
-        const BenchmarkInput& benchmarkInput
-    ) {
-        auto size = input.size;
-        auto& grid = input.grid;
-        auto generations = benchmarkInput.generations;
-        auto iterations = benchmarkInput.iterations;
-        // TODO: ThreadConfig
-        // auto dynamic = benchmarkInput.dynamic;
-        // auto threadCount = benchmarkInput.threadCount;
-        //
-        // if (dynamic) omp_set_dynamic(*dynamic);
-        // if (threadCount) omp_set_num_threads(*threadCount);
-
-        std::vector<std::chrono::duration<double, std::milli>> measurements;
-        measurements.reserve(iterations);
-
-
-        for (auto i = 0; i < iterations; ++i) {
-            std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
-            flattenAndPadGrid(size, grid, oldGrid);
-            std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
-
-            auto start = std::chrono::high_resolution_clock::now();
-            for (auto g = 0; g < generations; ++g) {
-                nextGeneration(size, oldGrid, newGrid);
-                swapAndResetNewGrid(oldGrid, newGrid);
-            }
-            auto end = std::chrono::high_resolution_clock::now();
-
-            measurements.emplace_back(end-start);
-        }
-
-
-        return BenchmarkResult(measurements);
-    }
-
     void run(
         const GameInput& input,
         const std::optional<ThreadConfig>& threadConfig,
@@ -194,6 +154,47 @@ namespace GameOfLife {
             swapAndResetNewGrid(oldGrid, newGrid);
         }
 
+    }
+
+    BenchmarkResult benchmark(
+        const GameInput& input,
+        const std::optional<ThreadConfig>& threadConfig,
+        const BenchmarkInput& benchmarkInput
+    ) {
+        std::cout << "Game of Life" << std::endl;
+
+        auto size = input.size;
+        auto& grid = input.grid;
+        auto generations = benchmarkInput.generations;
+        auto iterations = benchmarkInput.iterations;
+        std::cout << "Parameters:  " << std::endl;
+        std::cout << "  Size: " << size << std::endl;
+        std::cout << "  generations: " << generations << std::endl;
+        std::cout << "  Iterations: " << iterations << std::endl;
+
+        configureOpenMp(threadConfig);
+
+        std::vector<std::chrono::duration<double, std::milli>> measurements;
+        measurements.reserve(iterations);
+
+        for (auto i = 0; i < iterations; ++i) {
+            std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+            flattenAndPadGrid(size, grid, oldGrid);
+            std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+
+            auto start = std::chrono::high_resolution_clock::now();
+            for (auto g = 0; g < generations; ++g) {
+                nextGeneration(size, oldGrid, newGrid);
+                swapAndResetNewGrid(oldGrid, newGrid);
+            }
+            auto end = std::chrono::high_resolution_clock::now();
+
+            measurements.emplace_back(end-start);
+        }
+
+        auto result = BenchmarkResult(measurements);
+        result.print();
+        return result;
     }
 }
 

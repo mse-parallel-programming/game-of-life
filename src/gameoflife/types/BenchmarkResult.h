@@ -26,9 +26,10 @@ namespace GameOfLife {
             maxTime( *std::max_element(measurements.begin(), measurements.end())) {}
 
         void print() const {
-            std::cout << "Average time: " << averageTime.count() << " ms" << std::endl;
-            std::cout << "Min time: " << minTime.count() << " ms" << std::endl;
-            std::cout << "Max time: " << maxTime.count() << " ms" << std::endl;
+            std::cout << "Benchmark result" << std::endl;
+            std::cout << "  Average time: " << averageTime.count() << " ms" << std::endl;
+            std::cout << "  Min time: " << minTime.count() << " ms" << std::endl;
+            std::cout << "  Max time: " << maxTime.count() << " ms" << std::endl;
         }
     };
 }

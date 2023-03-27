@@ -11,6 +11,7 @@
 #include "messages/Start.h"
 #include "messages/Update.h"
 #include "server/Server.h"
+#include "benchmark/Benchmark.h"
 
 
 /*std::string read(asio::ip::tcp::socket& socket) {
@@ -190,5 +191,7 @@ int main() {
     };
     GameOfLife::run(input, printCallback);*/
 
-    Server::run(1234);
+    // Server::run(1234);
+
+    Benchmark::localBenchmark(10, 2000, 1024, std::vector<int> { 1 });
 }

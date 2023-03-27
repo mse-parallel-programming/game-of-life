@@ -10,13 +10,9 @@
 #include <cmath>
 #include <stdexcept>
 #include "../global.h"
+#include "../gameoflife/types/GameInput.h"
 
 namespace Util {
-    // struct GameInput {
-    // public:
-    //     int size;
-    //     std::vector<Cell> grid;
-    // };
 
     static GameOfLife::GameInput textInput(const std::string& textInput) {
         auto size = sqrt((double)textInput.size());
@@ -28,20 +24,6 @@ namespace Util {
         auto intSize = (int)size;
 
         std::vector<char> rawInput(textInput.begin(), textInput.end());
-
-
-        /*// Transform input
-        // https://stackoverflow.com/a/51075101
-        std::vector<Cell> input;
-        input.reserve(rawInput.size());
-        std::transform(
-            rawInput.begin(), rawInput.end(),
-            std::back_inserter(input),
-            [](char elem) {
-                return elem == '.' ? DEAD : ALIVE;
-            });
-
-        return GameInput {(int) size, input };*/
 
         std::vector<std::vector<Cell>> input;
         input.reserve(intSize);
@@ -61,19 +43,23 @@ namespace Util {
         return GameOfLife::GameInput { intSize, input };
     }
 
-    /*static GameInput randomInput(int size, double alivePercentage) {
-        int length = size*size;
-        std::vector<Cell> input(length, DEAD);
+    static GameOfLife::GameInput randomInput(int size, double alivePercentage) {
+        std::vector<std::vector<Cell>> input;
+        input.reserve(size);
 
-        for (auto i = 0; i < length; ++i) {
-            // Random value with distribution
-            auto val = (double)rand() / RAND_MAX;
-            if (val < alivePercentage)
-                input[i] = ALIVE;
+        for (auto i = 0; i < size; ++i) {
+            std::vector<Cell> rowInput(size, DEAD);
+            for (auto j = 0; j < size; j++) {
+                // Random value with distribution
+                auto val = (double)rand() / RAND_MAX;
+                if (val < alivePercentage)
+                    rowInput[i] = ALIVE;
+            }
+            input.emplace_back(rowInput);
         }
 
-        return GameInput { size, input };
-    }*/
+        return GameOfLife::GameInput { size, input };
+    }
 }
 
 #endif //PPR_GAME_OF_LIFE_INPUT_H

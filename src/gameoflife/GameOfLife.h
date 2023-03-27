@@ -80,6 +80,7 @@ namespace GameOfLife {
 
     BenchmarkResult benchmark(
         const GameInput& input,
+        const std::optional<ThreadConfig>& threadConfig,
         const BenchmarkInput& benchmarkInput
     );
 };
