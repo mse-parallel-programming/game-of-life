@@ -8,6 +8,7 @@
 #include "../messages/Update.h"
 #include "../gameoflife/GameOfLife.h"
 #include "../messages/UpdateAck.h"
+#include "../messages/Benchmark.h"
 
 namespace {
     void signalHandler(int signal) {
@@ -24,6 +25,50 @@ namespace {
     void send(asio::ip::tcp::socket& socket, const std::string& message) {
         const std::string terminatedMsg = message + "\n";
         asio::write(socket, asio::buffer(terminatedMsg));
+    }
+
+    void interactive(
+        const GameOfLife::GameInput& input,
+        const std::optional<GameOfLife::ThreadConfig>& threadConfig,
+        asio::ip::tcp::socket& socket
+    ) {
+        auto socketCallback = [&socket](
+            int generation, int size,
+            std::vector<Cell>& oldGrid,
+            std::vector<Cell>& newGrid
+        ) {
+            auto updateMsg = Message::Update::from(generation, size, oldGrid, newGrid);
+            json updateMsgJson = updateMsg;
+            std::cout << updateMsgJson.dump() << std::endl;
+
+            try {
+                send(socket, updateMsgJson.dump());
+                auto responseJson = read(socket);
+                auto response = json::parse(responseJson).get<Message::UpdateAck>();
+                return response.next;
+            } catch (...) {
+                return false;
+            }
+        };
+
+        GameOfLife::run(input, threadConfig, socketCallback);
+    }
+
+    void benchmark(
+        const GameOfLife::GameInput& input,
+        const std::optional<GameOfLife::ThreadConfig>& threadConfig,
+        const GameOfLife::BenchmarkInput& benchmarkInput,
+        asio::ip::tcp::socket& socket
+    ) {
+        auto result = GameOfLife::benchmarkWithGrid(input, threadConfig, benchmarkInput);
+        auto resultMsg = Message::Benchmark(result);
+        json resultMsgJson = resultMsg;
+
+        try {
+            send(socket, resultMsgJson.dump());
+        } catch (...) {
+            std::cout << "Something went wrong sending benchmark results" << std::endl;
+        }
     }
 }
 
@@ -65,33 +110,39 @@ namespace Server {
 
             auto startMsg = read(socket);
             auto start = json::parse(startMsg).get<Message::Start>();
+            auto input = start.input;
+            auto threadConfig = start.threadConfig;
 
             // TODO: Start benchmark mode when benchmark input is not empty
             if (auto benchmarkInput = start.benchmarkInput) {
-                std::cout << benchmarkInput->iterations << std::endl;
-                std::cout << benchmarkInput->generations << std::endl;
+                // benchmark mode
+                benchmark(input, threadConfig, *benchmarkInput, socket);
+            } else {
+                // Interactive mode
+                interactive(input, threadConfig, socket);
             }
 
-            auto socketCallback = [&socket](
-                int generation, int size,
-                std::vector<Cell>& oldGrid,
-                std::vector<Cell>& newGrid
-            ) {
-                auto updateMsg = Message::Update::from(generation, size, oldGrid, newGrid);
-                json updateMsgJson = updateMsg;
-                std::cout << updateMsgJson.dump() << std::endl;
+            // auto socketCallback = [&socket](
+            //     int generation, int size,
+            //     std::vector<Cell>& oldGrid,
+            //     std::vector<Cell>& newGrid
+            // ) {
+            //     auto updateMsg = Message::Update::from(generation, size, oldGrid, newGrid);
+            //     json updateMsgJson = updateMsg;
+            //     std::cout << updateMsgJson.dump() << std::endl;
+            //
+            //     try {
+            //         send(socket, updateMsgJson.dump());
+            //         auto responseJson = read(socket);
+            //         auto response = json::parse(responseJson).get<Message::UpdateAck>();
+            //         return response.next;
+            //     } catch (...) {
+            //         return false;
+            //     }
+            // };
+            //
+            // GameOfLife::run(start.input, start.threadConfig, socketCallback);
 
-                try {
-                    send(socket, updateMsgJson.dump());
-                    auto responseJson = read(socket);
-                    auto response = json::parse(responseJson).get<Message::UpdateAck>();
-                    return response.next;
-                } catch (...) {
-                    return false;
-                }
-            };
-
-            GameOfLife::run(start.input, start.threadConfig, socketCallback);
 
             socket.close();
         }

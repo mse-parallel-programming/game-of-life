@@ -196,6 +196,64 @@ namespace GameOfLife {
         result.print();
         return result;
     }
+
+    std::tuple<BenchmarkResult, std::vector<std::vector<Cell>>>
+    benchmarkWithGrid(
+        const GameInput& input,
+        const std::optional<ThreadConfig>& threadConfig,
+        const BenchmarkInput& benchmarkInput
+    ) {
+        std::cout << "Game of Life" << std::endl;
+
+        auto size = input.size;
+        auto& grid = input.grid;
+        auto generations = benchmarkInput.generations;
+        auto iterations = benchmarkInput.iterations;
+        std::cout << "Parameters:  " << std::endl;
+        std::cout << "  Size: " << size << std::endl;
+        std::cout << "  generations: " << generations << std::endl;
+        std::cout << "  Iterations: " << iterations << std::endl;
+
+        configureOpenMp(threadConfig);
+
+        std::vector<std::chrono::duration<double, std::milli>> measurements;
+        measurements.reserve(iterations);
+        std::vector<Cell> rawGrid;
+
+        for (auto i = 0; i < iterations; ++i) {
+            std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+            flattenAndPadGrid(size, grid, oldGrid);
+            std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+
+            auto start = std::chrono::high_resolution_clock::now();
+            for (auto g = 0; g < generations; ++g) {
+                nextGeneration(size, oldGrid, newGrid);
+                swapAndResetNewGrid(oldGrid, newGrid);
+            }
+            auto end = std::chrono::high_resolution_clock::now();
+
+            measurements.emplace_back(end-start);
+            rawGrid.swap(oldGrid);
+        }
+
+        auto benchmarkResult = BenchmarkResult(measurements);
+        benchmarkResult.print();
+
+        std::vector<std::vector<Cell>> gridResult;
+        gridResult.reserve(size);
+        for (auto i = 0; i < size; ++i) {
+            auto startIndex = size + 3 + (i * 2) + (i * size);
+            std::vector<Cell> row;
+            row.reserve(size);
+            for (auto j = 0; j < size; ++j) {
+                auto pos = startIndex + j;
+                row.emplace_back(rawGrid[pos]);
+            }
+            gridResult.emplace_back(row);
+        }
+
+        return { benchmarkResult, gridResult };
+    }
 }
 
 

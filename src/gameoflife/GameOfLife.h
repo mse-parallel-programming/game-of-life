@@ -83,6 +83,12 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const BenchmarkInput& benchmarkInput
     );
+
+    std::tuple<BenchmarkResult, std::vector<std::vector<Cell>>> benchmarkWithGrid(
+        const GameInput& input,
+        const std::optional<ThreadConfig>& threadConfig,
+        const BenchmarkInput& benchmarkInput
+    );
 };
 
 #endif //PPR_GAME_OF_LIFE_GAMEOFLIFE_H

@@ -7,6 +7,9 @@
 
 #include "asio.hpp"
 #include "json.hpp"
+#include "../gameoflife/types/GameInput.h"
+#include "../gameoflife/types/ThreadConfig.h"
+#include "../gameoflife/types/BenchmarkInput.h"
 #include <functional>
 #include <optional>
 #include <iostream>
@@ -19,6 +22,19 @@ namespace {
     void signalHandler(int signal);
     std::string read(asio::ip::tcp::socket& socket);
     void send(asio::ip::tcp::socket& socket, const std::string& message);
+
+    void interactive(
+        const GameOfLife::GameInput& input,
+        const std::optional<GameOfLife::ThreadConfig>& threadConfig,
+        asio::ip::tcp::socket& socket
+    );
+
+    void benchmark(
+        const GameOfLife::GameInput& input,
+        const std::optional<GameOfLife::ThreadConfig>& threadConfig,
+        const GameOfLife::BenchmarkInput& benchmarkInput,
+        asio::ip::tcp::socket& socket
+    );
 }
 
 namespace Server {
