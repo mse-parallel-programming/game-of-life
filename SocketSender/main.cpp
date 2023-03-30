@@ -12,7 +12,8 @@ int main() {
     for(int i = 0; i < length; i++) {
         int** arr = generate_random_array();
         send_array_and_message(fd, arr);
-        usleep(800);
+        delete [] arr;
+        sleep(1);
     }
 
     //Exit key
