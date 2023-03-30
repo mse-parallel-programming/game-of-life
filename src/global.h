@@ -11,5 +11,6 @@ extern const bool ALIVE;
 extern const bool DEAD;
 // https://stackoverflow.com/a/32821197
 typedef unsigned char Cell;
+// typedef int Cell;
 
 #endif //PPR_GAME_OF_LIFE_GLOBAL_H

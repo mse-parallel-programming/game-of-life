@@ -87,6 +87,21 @@ namespace {
         // https://stackoverflow.com/a/9954045
         // https://stackoverflow.com/a/2951386
 
+        // TODO Speedup
+        // * Add padding to avoid false sharing
+        // * Use raw array instead of vec here
+        // * for (auto j = 0 .. => for (auto pos = startIndex ..)
+        // * Check which is faster reset new grid or write dead values in toBeOrNotTobe
+        // * Cell of int vs unsigned char
+        // Only benchmark with speedups: .\game_of_life.exe "benchmark" "10240" "10" "2" "1|2|4|6"
+
+        // auto* data = oldGrid.data();
+
+
+
+
+        // #pragma omp for collapse(1) \
+        // schedule(static)
         #pragma omp parallel for collapse(1) \
         schedule(static) \
         default(none) firstprivate(size) shared(oldGrid, newGrid)
