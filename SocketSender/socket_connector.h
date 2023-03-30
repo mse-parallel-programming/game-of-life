@@ -5,8 +5,8 @@
 #include <winsock2.h>
 #include <unistd.h>
 
-const int rows = 30;
-const int cols = 30;
+const int rows = 10;
+const int cols = 10;
 const int port = 3000;
 
 int** generate_random_array();

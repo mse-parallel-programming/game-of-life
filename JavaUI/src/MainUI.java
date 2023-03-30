@@ -9,9 +9,9 @@ import javax.swing.JPanel;
 public class MainUI extends JPanel {
 
     private static final boolean WITH_RANDOM_VALUES = false;
-    private static final int SQUARE_SIZE = 10;
-    public static final int SQUARE_ROW = 30;
-    public static final int SQUARE_COLUMN = 30;
+    private static final int SQUARE_SIZE = 30;
+    public static final int SQUARE_ROW = 10;
+    public static final int SQUARE_COLUMN = 10;
     private static final int BOARD_ROW_SIZE = SQUARE_SIZE * SQUARE_ROW;
     private static final int BOARD_COLUMN_SIZE = SQUARE_SIZE * SQUARE_COLUMN;
     private static JFrame mainFrame;

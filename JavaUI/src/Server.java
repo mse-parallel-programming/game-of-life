@@ -72,10 +72,11 @@ public class Server {
 
 // Reconstruct the 2D integer array from the byte array
                 int[][] arr = new int[MainUI.SQUARE_ROW][MainUI.SQUARE_COLUMN];
+                int index = 0; //i * MainUI.SQUARE_COLUMN + j;
                 for (int i = 0; i < MainUI.SQUARE_ROW; i++) {
                     for (int j = 0; j < MainUI.SQUARE_COLUMN; j++) {
-                        int index = i * MainUI.SQUARE_COLUMN + j;
                         arr[i][j] = bytes[index];
+                        index+=4;
                     }
                 }
                 return arr;
