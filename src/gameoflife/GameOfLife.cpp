@@ -85,17 +85,28 @@ namespace {
         // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
         if (oldGrid[pos] == ALIVE) {
             // Any live cell with two or three live neighbours survives.
+            if (aliveNeighbours == 2 || aliveNeighbours == 3) newGrid[pos] = ALIVE;
+            else newGrid[pos] = DEAD;
+            // All other live cells die in the next generation.
+            // Similarly, all other dead cells stay dead.
+            // -- Note: no else is needed as DEAD is the default value
+        } else {
+            // Any dead cell with three live neighbours becomes a live cell.
+            if (aliveNeighbours == 3) newGrid[pos] = ALIVE;
+            else newGrid[pos] = DEAD;
+        }
+        /*// https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
+        if (oldGrid[pos] == ALIVE) {
+            // Any live cell with two or three live neighbours survives.
             if (aliveNeighbours == 2 || aliveNeighbours == 3)
                 newGrid[pos] = ALIVE;
-            else
-                newGrid[pos] = DEAD;
             // All other live cells die in the next generation.
             // Similarly, all other dead cells stay dead.
             // -- Note: no else is needed as DEAD is the default value
         } else if (aliveNeighbours == 3) {
             // Any dead cell with three live neighbours becomes a live cell.
             newGrid[pos] = ALIVE;
-        }
+        }*/
     }
 
     void nextGeneration(
@@ -182,7 +193,7 @@ namespace {
             for (auto j = 0; j < size; ++j) {
                 // auto pos = (i * size) + j;
                 auto padPos = startIndex + j;
-                paddedGrid[padPos] = grid[i][j];
+                paddedGrid[padPos] = static_cast<CellA>(grid[i][j]);
             }
         }
     }
@@ -260,20 +271,35 @@ namespace GameOfLife {
 
         std::vector<std::chrono::duration<double, std::milli>> measurements;
         measurements.reserve(iterations);
-        std::vector<Cell> rawGrid;
+        //std::vector<Cell> rawGrid;
+        CellA* rawGrid;
 
         for (auto i = 0; i < iterations; ++i) {
             //std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+
+
             auto* oldGrid = new CellA[(size + 2) * (size + 2)];
+            std::fill_n(oldGrid, (size + 2) * (size + 2), DEAD);
             flattenAndPadGrid(size, grid, oldGrid);
-            //std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+            // std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
             auto* newGrid = new CellA[(size + 2) * (size + 2)];
+            std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
+
+            auto s = (size + 2) * (size + 2);
 
             auto start = std::chrono::high_resolution_clock::now();
             for (auto g = 0; g < generations; ++g) {
                 nextGeneration(size, oldGrid, newGrid);
                 // swapAndResetNewGrid(oldGrid, newGrid);
                 std::swap(oldGrid, newGrid);
+
+                // TODO: Filling seems slower than additional if else in next generation
+                // std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
+
+                // #pragma omp parallel for collapse(1) \
+                // schedule(static) \
+                // default(none) firstprivate(size) firstprivate(s, DEAD) shared(newGrid)
+                // for (auto test = 0; test < s; ++test) newGrid[test] = DEAD;
             }
             /*int g;
             // #pragma omp parallel default(none) private(g) firstprivate(generations, size) shared(oldGrid, newGrid)
@@ -301,7 +327,8 @@ namespace GameOfLife {
             measurements.emplace_back(end-start);
             // rawGrid.swap(oldGrid);
 
-            delete[] oldGrid;
+            if (i == 0) std::swap(rawGrid, oldGrid);
+            else delete[] oldGrid;
             delete[] newGrid;
         }
 
@@ -311,16 +338,27 @@ namespace GameOfLife {
         std::vector<std::vector<Cell>> gridResult;
         gridResult.reserve(size);
         // TODO: Build result
-        /*for (auto i = 0; i < size; ++i) {
+        for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             std::vector<Cell> row;
             row.reserve(size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
-                row.emplace_back(rawGrid[pos]);
+                row.emplace_back(static_cast<Cell>(rawGrid[pos]));
             }
             gridResult.emplace_back(row);
-        }*/
+        }
+        delete[] rawGrid;
+        // for (auto i = 0; i < size; ++i) {
+        //     auto startIndex = size + 3 + (i * 2) + (i * size);
+        //     std::vector<Cell> row;
+        //     row.reserve(size);
+        //     for (auto j = 0; j < size; ++j) {
+        //         auto pos = startIndex + j;
+        //         row.emplace_back(rawGrid[pos]);
+        //     }
+        //     gridResult.emplace_back(row);
+        // }
 
         return { benchmarkResult, gridResult };
     }

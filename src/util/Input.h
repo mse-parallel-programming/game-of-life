@@ -43,6 +43,21 @@ namespace Util {
         return GameOfLife::GameInput { intSize, input };
     }
 
+    static std::string toText(const std::vector<std::vector<Cell>>& result) {
+        auto size = result.size();
+        std::string text;
+        text.reserve(size);
+        for (auto i = 0; i < size; ++i) {
+            for (auto j = 0; j < size; ++j) {
+                auto value = static_cast<bool>(result[i][j]);
+                if (value) text.push_back('*');
+                else text.push_back('.');
+            }
+
+        }
+        return text;
+    }
+
     static GameOfLife::GameInput randomInput(int size, double alivePercentage) {
         std::vector<std::vector<Cell>> input;
         input.reserve(size);
