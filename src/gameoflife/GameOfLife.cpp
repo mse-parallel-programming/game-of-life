@@ -46,6 +46,21 @@ namespace {
         return count;
     }
 
+    int neighbourCount(int pos, int size, const CellA* grid) {
+        int count = 0;
+        int upOffset = pos - size - 2;
+        int downOffset = pos + size + 2;
+
+        // Row about current one
+        count += grid[upOffset-1] + grid[upOffset] + grid[upOffset+1];
+        // Current row
+        count += grid[pos-1] + grid[pos+1];
+        // Row below current one
+        count += grid[downOffset-1] + grid[downOffset] + grid[downOffset+1];
+
+        return count;
+    }
+
     void toBeOrNotToBe(
         int pos,
         int aliveNeighbours,
@@ -57,6 +72,23 @@ namespace {
             // Any live cell with two or three live neighbours survives.
             if (aliveNeighbours == 2 || aliveNeighbours == 3)
                 newGrid[pos] = ALIVE;
+            // All other live cells die in the next generation.
+            // Similarly, all other dead cells stay dead.
+            // -- Note: no else is needed as DEAD is the default value
+        } else if (aliveNeighbours == 3) {
+            // Any dead cell with three live neighbours becomes a live cell.
+            newGrid[pos] = ALIVE;
+        }
+    }
+
+    void toBeOrNotToBe(int pos, int aliveNeighbours, const CellA* oldGrid, CellA* newGrid) {
+        // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
+        if (oldGrid[pos] == ALIVE) {
+            // Any live cell with two or three live neighbours survives.
+            if (aliveNeighbours == 2 || aliveNeighbours == 3)
+                newGrid[pos] = ALIVE;
+            else
+                newGrid[pos] = DEAD;
             // All other live cells die in the next generation.
             // Similarly, all other dead cells stay dead.
             // -- Note: no else is needed as DEAD is the default value
@@ -115,6 +147,20 @@ namespace {
         }
     }
 
+    void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
+        #pragma omp parallel for collapse(1) \
+        schedule(static) \
+        default(none) firstprivate(size) shared(oldGrid, newGrid)
+        for (auto i = 0; i < size; ++i) {
+            auto startIndex = size + 3 + (i * 2) + (i * size);
+            for (auto j = 0; j < size; ++j) {
+                auto pos = startIndex + j;
+                auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
+                toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
+            }
+        }
+    }
+
     void flattenAndPadGrid(
         int size,
         const std::vector<std::vector<Cell>>& grid,
@@ -130,10 +176,23 @@ namespace {
         }
     }
 
+    void flattenAndPadGrid(int size, const std::vector<std::vector<Cell>>& grid, CellA* paddedGrid) {
+        for (auto i = 0; i < size; ++i) {
+            auto startIndex = size + 3 + (i * 2) + (i * size);
+            for (auto j = 0; j < size; ++j) {
+                // auto pos = (i * size) + j;
+                auto padPos = startIndex + j;
+                paddedGrid[padPos] = grid[i][j];
+            }
+        }
+    }
+
     void swapAndResetNewGrid(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid)  {
         oldGrid.swap(newGrid);
         std::fill(newGrid.begin(), newGrid.end(), DEAD);
     }
+
+
 }
 
 namespace GameOfLife {
@@ -204,19 +263,46 @@ namespace GameOfLife {
         std::vector<Cell> rawGrid;
 
         for (auto i = 0; i < iterations; ++i) {
-            std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+            //std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+            auto* oldGrid = new CellA[(size + 2) * (size + 2)];
             flattenAndPadGrid(size, grid, oldGrid);
-            std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+            //std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+            auto* newGrid = new CellA[(size + 2) * (size + 2)];
 
             auto start = std::chrono::high_resolution_clock::now();
             for (auto g = 0; g < generations; ++g) {
                 nextGeneration(size, oldGrid, newGrid);
-                swapAndResetNewGrid(oldGrid, newGrid);
+                // swapAndResetNewGrid(oldGrid, newGrid);
+                std::swap(oldGrid, newGrid);
             }
+            /*int g;
+            // #pragma omp parallel default(none) private(g) firstprivate(generations, size) shared(oldGrid, newGrid)
+            for (g = 0; g < generations; ++g) {
+                // nextGeneration(size, oldGrid, newGrid);
+                // #pragma omp for schedule(static)
+                #pragma omp parallel for default(none) private(g) firstprivate(generations, size) shared(oldGrid, newGrid)
+                for (auto i2 = 0; i2 < size; ++i2) {
+                    auto startIndex = size + 3 + (i2 * 2) + (i2 * size);
+                    for (auto j = 0; j < size; ++j) {
+                        auto pos = startIndex + j;
+                        auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
+                        toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
+                    }
+                }
+                // #pragma omp single
+                // {
+                //     swapAndResetNewGrid(oldGrid, newGrid);
+                // }
+                swapAndResetNewGrid(oldGrid, newGrid);
+
+            }*/
             auto end = std::chrono::high_resolution_clock::now();
 
             measurements.emplace_back(end-start);
-            rawGrid.swap(oldGrid);
+            // rawGrid.swap(oldGrid);
+
+            delete[] oldGrid;
+            delete[] newGrid;
         }
 
         auto benchmarkResult = BenchmarkResult(measurements);
@@ -224,7 +310,8 @@ namespace GameOfLife {
 
         std::vector<std::vector<Cell>> gridResult;
         gridResult.reserve(size);
-        for (auto i = 0; i < size; ++i) {
+        // TODO: Build result
+        /*for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             std::vector<Cell> row;
             row.reserve(size);
@@ -233,7 +320,7 @@ namespace GameOfLife {
                 row.emplace_back(rawGrid[pos]);
             }
             gridResult.emplace_back(row);
-        }
+        }*/
 
         return { benchmarkResult, gridResult };
     }

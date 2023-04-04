@@ -42,9 +42,20 @@ namespace {
         std::vector<Cell>& newGrid
     );
 
+    void nextGeneration(
+        int size,
+        CellA* oldGrid,
+        CellA* newGrid
+    );
+
     int neighbourCount(
         int pos, int size,
         std::vector<Cell>& grid
+    );
+
+    int neighbourCount(
+        int pos, int size,
+        const CellA* grid
     );
 
     void toBeOrNotToBe(
@@ -54,10 +65,23 @@ namespace {
         std::vector<Cell>& newGrid
     );
 
+    void toBeOrNotToBe(
+        int pos,
+        int aliveNeighbours,
+        const CellA* oldGrid,
+        CellA* newGrid
+    );
+
     void flattenAndPadGrid(
         int size,
         const std::vector<std::vector<Cell>>& grid,
         std::vector<Cell>& paddedGrid
+    );
+
+    void flattenAndPadGrid(
+        int size,
+        const std::vector<std::vector<Cell>>& grid,
+        CellA* paddedGrid
     );
 
     void swapAndResetNewGrid(
