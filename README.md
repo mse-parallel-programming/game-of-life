@@ -13,13 +13,52 @@ Bad benchmarks
 Improvements
 
 * std vec bool => std vec unsigned char => bool[]
+
   * vec should have same performance as array when not resizing but rewriting gave a small boost
+
 * false sharing padding
+
   * Did not observe any performance impact 
+
 * ALIVE, DEAD constants
+
   * using const bool is way faster than define ALIVE true
   * have not found any explanation, global bool is shared via all threads wheres define is compiler punched
   * maybe compiler optimizations?
+
+* omp no difference
+
+  ```
+  #pragma omp parallel default(none) firstprivate(generations, size) shared(oldGrid, newGrid)
+              {
+                  for (auto g = 0; g < generations; ++g) {
+                      nextGeneration(size, oldGrid, newGrid);
+                      // swapAndResetNewGrid(oldGrid, newGrid);
+  
+                      #pragma omp single
+                      {
+                          std::swap(oldGrid, newGrid);
+                      };
+              }
+  }
+  
+  #pragma omp for schedule(static)
+          for (auto i = 0; i < size; ++i) {
+              auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
+              for (auto j = 0; j < size; ++j) {
+                  auto pos = startIndex + j;
+                  auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
+                  toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
+              }
+          }
+          
+  ```
+
+  ```
+  
+  ```
+
+  
 
 New Benchmarks:
 
@@ -27,7 +66,7 @@ New Benchmarks:
 
 ## Test
 
-TODO describe
+TODO describe how to run tests
 
 ## 🛠️ Build
 

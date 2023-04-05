@@ -159,9 +159,10 @@ namespace {
     }
 
     void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
-        #pragma omp parallel for collapse(1) \
-        schedule(static) \
-        default(none) firstprivate(size, oldGrid, newGrid)
+        // #pragma omp parallel for collapse(1) \
+        // schedule(static) \
+        // default(none) firstprivate(size, oldGrid, newGrid)
+        #pragma omp for schedule(static)
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
             for (auto j = 0; j < size; ++j) {
@@ -293,19 +294,30 @@ namespace GameOfLife {
             auto s = (size + 2) * (size + 2);
 
             auto start = std::chrono::high_resolution_clock::now();
-            for (auto g = 0; g < generations; ++g) {
-                nextGeneration(size, oldGrid, newGrid);
-                // swapAndResetNewGrid(oldGrid, newGrid);
-                std::swap(oldGrid, newGrid);
+            #pragma omp parallel default(none) firstprivate(generations, size) shared(oldGrid, newGrid)
+            {
+                for (auto g = 0; g < generations; ++g) {
+                    nextGeneration(size, oldGrid, newGrid);
+                    // swapAndResetNewGrid(oldGrid, newGrid);
 
-                // TODO: Filling seems slower than additional if else in next generation
-                // std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
+                    #pragma omp single
+                    {
+                        std::swap(oldGrid, newGrid);
+                    };
 
-                // #pragma omp parallel for collapse(1) \
+
+
+                    // TODO: Filling seems slower than additional if else in next generation
+                    // std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
+
+                    // #pragma omp parallel for collapse(1) \
                 // schedule(static) \
                 // default(none) firstprivate(size) firstprivate(s, DEAD) shared(newGrid)
-                // for (auto test = 0; test < s; ++test) newGrid[test] = DEAD;
+                    // for (auto test = 0; test < s; ++test) newGrid[test] = DEAD;
+                }
             }
+
+
             /*int g;
             // #pragma omp parallel default(none) private(g) firstprivate(generations, size) shared(oldGrid, newGrid)
             for (g = 0; g < generations; ++g) {
