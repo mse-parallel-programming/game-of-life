@@ -16,31 +16,8 @@
 #include "types/BenchmarkInput.h"
 #include "types/ThreadConfig.h"
 
-// class GameOfLife {
-// public:
-//     virtual void run(
-//         int generations,
-//         int size,
-//         const std::vector<Cell>& grid,
-//         std::function<void(std::vector<Cell>)> callback
-//     );
-//
-//     virtual void benchmark(
-//         int iterations,
-//         int generations,
-//         int size,
-//         const std::vector<Cell>& grid
-//     );
-// };
-
 namespace {
     void configureOpenMp(const std::optional<GameOfLife::ThreadConfig>& threadConfig);
-
-    void nextGeneration(
-        int size,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
-    );
 
     void nextGeneration(
         int size,
@@ -50,19 +27,7 @@ namespace {
 
     int neighbourCount(
         int pos, int size,
-        std::vector<Cell>& grid
-    );
-
-    int neighbourCount(
-        int pos, int size,
         const CellA* grid
-    );
-
-    void toBeOrNotToBe(
-        int pos,
-        int aliveNeighbours,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
     );
 
     void toBeOrNotToBe(
@@ -75,19 +40,12 @@ namespace {
     void flattenAndPadGrid(
         int size,
         const std::vector<std::vector<Cell>>& grid,
-        std::vector<Cell>& paddedGrid
-    );
-
-    void flattenAndPadGrid(
-        int size,
-        const std::vector<std::vector<Cell>>& grid,
         CellA* paddedGrid
     );
 
-    void swapAndResetNewGrid(
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
-    );
+    int rowStartIndexAt(int i, int size);
+
+    std::vector<std::vector<Cell>> gridToVec(int size, const CellA* grid);
 }
 
 namespace GameOfLife {

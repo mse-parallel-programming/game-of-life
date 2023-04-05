@@ -23,12 +23,13 @@ namespace {
             threadCount = (int) std::thread::hardware_concurrency();
         }
 
+        // Configure openmp to used fixed thread size
         // https://stackoverflow.com/a/11096742
         omp_set_dynamic(dynamic);
         omp_set_num_threads(threadCount);
 
         std::cout << "  OpenMP Dynamic: " << dynamic << std::endl;
-        std::cout << "  OpenMP Thread Count : " << threadCount << std::endl;
+        std::cout << "  OpenMP Thread Count: " << threadCount << std::endl;
     }
 
     int neighbourCount(int pos, int size, std::vector<Cell>& grid) {
@@ -48,8 +49,8 @@ namespace {
 
     int neighbourCount(int pos, int size, const CellA* grid) {
         int count = 0;
-        int upOffset = pos - size - 2 - 64;
-        int downOffset = pos + size + 2 + 64;
+        auto upOffset = pos - size - 2 - falseSharingPadding;
+        auto downOffset = pos + size + 2 + falseSharingPadding;
 
         // Row about current one
         count += grid[upOffset - 1] + grid[upOffset] + grid[upOffset + 1];
@@ -85,28 +86,15 @@ namespace {
         // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
         if (oldGrid[pos] == ALIVE) {
             // Any live cell with two or three live neighbours survives.
+            // All other live cells die in the next generation.
             if (aliveNeighbours == 2 || aliveNeighbours == 3) newGrid[pos] = ALIVE;
             else newGrid[pos] = DEAD;
-            // All other live cells die in the next generation.
-            // Similarly, all other dead cells stay dead.
-            // -- Note: no else is needed as DEAD is the default value
         } else {
             // Any dead cell with three live neighbours becomes a live cell.
+            // Similarly, all other dead cells stay dead.
             if (aliveNeighbours == 3) newGrid[pos] = ALIVE;
             else newGrid[pos] = DEAD;
         }
-        /*// https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
-        if (oldGrid[pos] == ALIVE) {
-            // Any live cell with two or three live neighbours survives.
-            if (aliveNeighbours == 2 || aliveNeighbours == 3)
-                newGrid[pos] = ALIVE;
-            // All other live cells die in the next generation.
-            // Similarly, all other dead cells stay dead.
-            // -- Note: no else is needed as DEAD is the default value
-        } else if (aliveNeighbours == 3) {
-            // Any dead cell with three live neighbours becomes a live cell.
-            newGrid[pos] = ALIVE;
-        }*/
     }
 
     void nextGeneration(
@@ -163,7 +151,7 @@ namespace {
         schedule(static) \
         default(none) firstprivate(size, oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
+            auto startIndex = rowStartIndexAt(i, size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
                 auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
@@ -189,7 +177,7 @@ namespace {
 
     void flattenAndPadGrid(int size, const std::vector<std::vector<Cell>>& grid, CellA* paddedGrid) {
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
+            auto startIndex = rowStartIndexAt(i, size);
             for (auto j = 0; j < size; ++j) {
                 // auto pos = (i * size) + j;
                 auto padPos = startIndex + j;
@@ -198,10 +186,37 @@ namespace {
         }
     }
 
+    int rowStartIndexAt(int i, int size) {
+        // Returns the index equivalent to the i_th row of a double dimensional grid
+        // Is a bit complicated as the used grid is an one dimensional array, padded with dead cells
+        // and additional bytes to mitigate false sharing.
+        // --------------------------------------------------------
+        // Returning std::size_t resulting here to performance loss
+        // `hardware_destructive_interference_size` casted to int (`falseSharingPadding)` resolves this issue.
+        return size + 3 + falseSharingPadding + (i * 2) + (i * falseSharingPadding) + (i * size);
+    }
+
+    std::vector<std::vector<Cell>> gridToVec(int size, const CellA* grid) {
+        std::vector<std::vector<Cell>> gridResult;
+        gridResult.reserve(size);
+        for (auto i = 0; i < size; ++i) {
+            auto startIndex = rowStartIndexAt(i, size);
+            std::vector<Cell> row;
+            row.reserve(size);
+            for (auto j = 0; j < size; ++j) {
+                auto pos = startIndex + j;
+                row.emplace_back(static_cast<Cell>(grid[pos]));
+            }
+            gridResult.emplace_back(row);
+        }
+        return gridResult;
+    }
+
     void swapAndResetNewGrid(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid) {
         oldGrid.swap(newGrid);
         std::fill(newGrid.begin(), newGrid.end(), DEAD);
     }
+
 
 
 }
@@ -226,17 +241,21 @@ namespace GameOfLife {
 
         configureOpenMp(threadConfig);
 
-        std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+        auto paddedSize = (size + 2 + falseSharingPadding) * (size + 2);
+        auto* oldGrid = new CellA[paddedSize];
+        auto* newGrid = new CellA[paddedSize];
+        std::fill_n(oldGrid, paddedSize, DEAD);
         flattenAndPadGrid(size, grid, oldGrid);
-        std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+        std::fill_n(newGrid, paddedSize, DEAD);
+
 
         auto running = true;
         auto generation = 0;
         while (running) {
             ++generation;
             nextGeneration(size, oldGrid, newGrid);
-            running = callback(generation, size, oldGrid, newGrid);
-            swapAndResetNewGrid(oldGrid, newGrid);
+            // running = callback(generation, size, oldGrid, newGrid);
+            std::swap(oldGrid, newGrid);
         }
 
     }
@@ -271,100 +290,34 @@ namespace GameOfLife {
 
         std::vector<std::chrono::duration<double, std::milli>> measurements;
         measurements.reserve(iterations);
-        //std::vector<Cell> rawGrid;
-        CellA* rawGrid;
 
-        auto padding = 64;
-        auto paddedSize = (size + 2 + 64) * (size + 2);
+        auto paddedSize = (size + 2 + falseSharingPadding) * (size + 2);
         auto* oldGrid = new CellA[paddedSize];
         auto* newGrid = new CellA[paddedSize];
 
-
         for (auto i = 0; i < iterations; ++i) {
-            //std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
-            // flattenAndPadGrid(size, grid, oldGrid);
-            // std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
-
             std::fill_n(oldGrid, paddedSize, DEAD);
             flattenAndPadGrid(size, grid, oldGrid);
             std::fill_n(newGrid, paddedSize, DEAD);
-
-            auto s = (size + 2) * (size + 2);
 
             auto start = std::chrono::high_resolution_clock::now();
 
             for (auto g = 0; g < generations; ++g) {
                 nextGeneration(size, oldGrid, newGrid);
-                // swapAndResetNewGrid(oldGrid, newGrid);
                 std::swap(oldGrid, newGrid);
-
-
-                // TODO: Filling seems slower than additional if else in next generation
-                // std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
-
-                // #pragma omp parallel for collapse(1) \
-                // schedule(static) \
-                // default(none) firstprivate(size) firstprivate(s, DEAD) shared(newGrid)
-                // for (auto test = 0; test < s; ++test) newGrid[test] = DEAD;
             }
 
-
-            /*int g;
-            // #pragma omp parallel default(none) private(g) firstprivate(generations, size) shared(oldGrid, newGrid)
-            for (g = 0; g < generations; ++g) {
-                // nextGeneration(size, oldGrid, newGrid);
-                // #pragma omp for schedule(static)
-                #pragma omp parallel for default(none) private(g) firstprivate(generations, size) shared(oldGrid, newGrid)
-                for (auto i2 = 0; i2 < size; ++i2) {
-                    auto startIndex = size + 3 + (i2 * 2) + (i2 * size);
-                    for (auto j = 0; j < size; ++j) {
-                        auto pos = startIndex + j;
-                        auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
-                        toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
-                    }
-                }
-                // #pragma omp single
-                // {
-                //     swapAndResetNewGrid(oldGrid, newGrid);
-                // }
-                swapAndResetNewGrid(oldGrid, newGrid);
-
-            }*/
             auto end = std::chrono::high_resolution_clock::now();
-
             measurements.emplace_back(end - start);
-            // rawGrid.swap(oldGrid);
-
         }
 
         auto benchmarkResult = BenchmarkResult(measurements);
         benchmarkResult.print();
 
-        std::vector<std::vector<Cell>> gridResult;
-        gridResult.reserve(size);
-        // TODO: Build result
-        for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
-            std::vector<Cell> row;
-            row.reserve(size);
-            for (auto j = 0; j < size; ++j) {
-                auto pos = startIndex + j;
-                row.emplace_back(static_cast<Cell>(oldGrid[pos]));
-            }
-            gridResult.emplace_back(row);
-        }
-        delete[] oldGrid;
+        auto gridResult = gridToVec(size, oldGrid);
+
         delete[] newGrid;
-        // for (auto i = 0; i < size; ++i) {
-        //     auto startIndex = size + 3 + (i * 2) + (i * size);
-        //     std::vector<Cell> row;
-        //     row.reserve(size);
-        //     for (auto j = 0; j < size; ++j) {
-        //         auto pos = startIndex + j;
-        //         row.emplace_back(rawGrid[pos]);
-        //     }
-        //     gridResult.emplace_back(row);
-        // }
+        delete[] oldGrid;
 
         return {benchmarkResult, gridResult};
     }
