@@ -147,7 +147,7 @@ namespace {
         // schedule(static)
         #pragma omp parallel for collapse(1) \
         schedule(static) \
-        default(none) firstprivate(size) shared(oldGrid, newGrid)
+        default(none) firstprivate(size, oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + (i * 2) + (i * size);
             for (auto j = 0; j < size; ++j) {
