@@ -16,6 +16,8 @@ Improvements
 
   * vec should have same performance as array when not resizing but rewriting gave a small boost
 
+* writing all values to temporary grid is faster than reseting temporary grid to dead and setting only alive values
+
 * false sharing padding
 
   * Did not observe any performance impact 
@@ -56,6 +58,21 @@ Improvements
 
   ```
   
+  
+  
+  void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
+          #pragma omp parallel for collapse(1) \
+          schedule(static) \
+          default(none) firstprivate(size, oldGrid, newGrid)
+          for (auto i = 0; i < size; ++i) {
+              auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
+              for (auto j = 0; j < size; ++j) {
+                  auto pos = startIndex + j;
+                  auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
+                  toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
+              }
+          }
+      }
   ```
 
   

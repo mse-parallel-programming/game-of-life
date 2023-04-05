@@ -20,7 +20,7 @@ namespace {
             threadCount = threadConfig->threadCount;
         } else {
             dynamic = true;
-            threadCount= (int) std::thread::hardware_concurrency();
+            threadCount = (int) std::thread::hardware_concurrency();
         }
 
         // https://stackoverflow.com/a/11096742
@@ -37,11 +37,11 @@ namespace {
         int downOffset = pos + size + 2;
 
         // Row about current one
-        count += grid[upOffset-1] + grid[upOffset] + grid[upOffset+1];
+        count += grid[upOffset - 1] + grid[upOffset] + grid[upOffset + 1];
         // Current row
-        count += grid[pos-1] + grid[pos+1];
+        count += grid[pos - 1] + grid[pos + 1];
         // Row below current one
-        count += grid[downOffset-1] + grid[downOffset] + grid[downOffset+1];
+        count += grid[downOffset - 1] + grid[downOffset] + grid[downOffset + 1];
 
         return count;
     }
@@ -52,11 +52,11 @@ namespace {
         int downOffset = pos + size + 2 + 64;
 
         // Row about current one
-        count += grid[upOffset-1] + grid[upOffset] + grid[upOffset+1];
+        count += grid[upOffset - 1] + grid[upOffset] + grid[upOffset + 1];
         // Current row
-        count += grid[pos-1] + grid[pos+1];
+        count += grid[pos - 1] + grid[pos + 1];
         // Row below current one
-        count += grid[downOffset-1] + grid[downOffset] + grid[downOffset+1];
+        count += grid[downOffset - 1] + grid[downOffset] + grid[downOffset + 1];
 
         return count;
     }
@@ -159,10 +159,9 @@ namespace {
     }
 
     void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
-        // #pragma omp parallel for collapse(1) \
-        // schedule(static) \
-        // default(none) firstprivate(size, oldGrid, newGrid)
-        #pragma omp for schedule(static)
+        #pragma omp parallel for collapse(1) \
+        schedule(static) \
+        default(none) firstprivate(size, oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
             for (auto j = 0; j < size; ++j) {
@@ -199,7 +198,7 @@ namespace {
         }
     }
 
-    void swapAndResetNewGrid(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid)  {
+    void swapAndResetNewGrid(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid) {
         oldGrid.swap(newGrid);
         std::fill(newGrid.begin(), newGrid.end(), DEAD);
     }
@@ -233,7 +232,7 @@ namespace GameOfLife {
 
         auto running = true;
         auto generation = 0;
-        while(running) {
+        while (running) {
             ++generation;
             nextGeneration(size, oldGrid, newGrid);
             running = callback(generation, size, oldGrid, newGrid);
@@ -281,7 +280,6 @@ namespace GameOfLife {
         auto* newGrid = new CellA[paddedSize];
 
 
-
         for (auto i = 0; i < iterations; ++i) {
             //std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
             // flattenAndPadGrid(size, grid, oldGrid);
@@ -294,27 +292,20 @@ namespace GameOfLife {
             auto s = (size + 2) * (size + 2);
 
             auto start = std::chrono::high_resolution_clock::now();
-            #pragma omp parallel default(none) firstprivate(generations, size) shared(oldGrid, newGrid)
-            {
-                for (auto g = 0; g < generations; ++g) {
-                    nextGeneration(size, oldGrid, newGrid);
-                    // swapAndResetNewGrid(oldGrid, newGrid);
 
-                    #pragma omp single
-                    {
-                        std::swap(oldGrid, newGrid);
-                    };
+            for (auto g = 0; g < generations; ++g) {
+                nextGeneration(size, oldGrid, newGrid);
+                // swapAndResetNewGrid(oldGrid, newGrid);
+                std::swap(oldGrid, newGrid);
 
 
+                // TODO: Filling seems slower than additional if else in next generation
+                // std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
 
-                    // TODO: Filling seems slower than additional if else in next generation
-                    // std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
-
-                    // #pragma omp parallel for collapse(1) \
+                // #pragma omp parallel for collapse(1) \
                 // schedule(static) \
                 // default(none) firstprivate(size) firstprivate(s, DEAD) shared(newGrid)
-                    // for (auto test = 0; test < s; ++test) newGrid[test] = DEAD;
-                }
+                // for (auto test = 0; test < s; ++test) newGrid[test] = DEAD;
             }
 
 
@@ -341,7 +332,7 @@ namespace GameOfLife {
             }*/
             auto end = std::chrono::high_resolution_clock::now();
 
-            measurements.emplace_back(end-start);
+            measurements.emplace_back(end - start);
             // rawGrid.swap(oldGrid);
 
         }
@@ -375,7 +366,7 @@ namespace GameOfLife {
         //     gridResult.emplace_back(row);
         // }
 
-        return { benchmarkResult, gridResult };
+        return {benchmarkResult, gridResult};
     }
 }
 
