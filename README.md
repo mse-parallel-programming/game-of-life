@@ -1,5 +1,34 @@
 # game-of-life
 
+## TODO Report
+
+Bad benchmarks
+
+* too small size
+* intel turbo boost
+  * fewer cores => higher boost clock
+  * speedup decreases
+  * disabling increases from speedup ~3.7 to ~5
+
+Improvements
+
+* std vec bool => std vec unsigned char => bool[]
+  * vec should have same performance as array when not resizing but rewriting gave a small boost
+* false sharing padding
+  * Did not observe any performance impact 
+* ALIVE, DEAD constants
+  * using const bool is way faster than define ALIVE true
+  * have not found any explanation, global bool is shared via all threads wheres define is compiler punched
+  * maybe compiler optimizations?
+
+New Benchmarks:
+
+
+
+## Test
+
+TODO describe
+
 ## 🛠️ Build
 
 ```bash
@@ -56,7 +85,7 @@ Interactive Mode:
    }
    ```
 
-   > Example: Diff `[[2, [4, 5]], [5, [7]]]` means flip (alive/dead=>dead/alive) indices 4 & 5 at row 2 and flip index 7 at row 5. Rows & indices start at 0.
+   > Example: Diff `[[2, [4, 5]], [5, [7]]]` means flip (alive/dead=>dead/alive) indices 4 & 5 at row 2 and flip index 7 at row 5. Rows & indices start at 0.
 
 3. Client acknowledges
 

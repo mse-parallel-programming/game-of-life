@@ -161,7 +161,7 @@ namespace {
     void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
         #pragma omp parallel for collapse(1) \
         schedule(static) \
-        default(none) firstprivate(size) shared(oldGrid, newGrid)
+        default(none) firstprivate(size, oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
             auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
             for (auto j = 0; j < size; ++j) {
