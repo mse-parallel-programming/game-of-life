@@ -48,8 +48,8 @@ namespace {
 
     int neighbourCount(int pos, int size, const CellA* grid) {
         int count = 0;
-        int upOffset = pos - size - 2;
-        int downOffset = pos + size + 2;
+        int upOffset = pos - size - 2 - 64;
+        int downOffset = pos + size + 2 + 64;
 
         // Row about current one
         count += grid[upOffset-1] + grid[upOffset] + grid[upOffset+1];
@@ -163,7 +163,7 @@ namespace {
         schedule(static) \
         default(none) firstprivate(size) shared(oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
+            auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
                 auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
@@ -189,7 +189,7 @@ namespace {
 
     void flattenAndPadGrid(int size, const std::vector<std::vector<Cell>>& grid, CellA* paddedGrid) {
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
+            auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
             for (auto j = 0; j < size; ++j) {
                 // auto pos = (i * size) + j;
                 auto padPos = startIndex + j;
@@ -274,16 +274,21 @@ namespace GameOfLife {
         //std::vector<Cell> rawGrid;
         CellA* rawGrid;
 
+        auto padding = 64;
+        auto paddedSize = (size + 2 + 64) * (size + 2);
+        auto* oldGrid = new CellA[paddedSize];
+        auto* newGrid = new CellA[paddedSize];
+
+
+
         for (auto i = 0; i < iterations; ++i) {
             //std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
-
-
-            auto* oldGrid = new CellA[(size + 2) * (size + 2)];
-            std::fill_n(oldGrid, (size + 2) * (size + 2), DEAD);
-            flattenAndPadGrid(size, grid, oldGrid);
+            // flattenAndPadGrid(size, grid, oldGrid);
             // std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
-            auto* newGrid = new CellA[(size + 2) * (size + 2)];
-            std::fill_n(newGrid, (size + 2) * (size + 2), DEAD);
+
+            std::fill_n(oldGrid, paddedSize, DEAD);
+            flattenAndPadGrid(size, grid, oldGrid);
+            std::fill_n(newGrid, paddedSize, DEAD);
 
             auto s = (size + 2) * (size + 2);
 
@@ -327,9 +332,6 @@ namespace GameOfLife {
             measurements.emplace_back(end-start);
             // rawGrid.swap(oldGrid);
 
-            if (i == 0) std::swap(rawGrid, oldGrid);
-            else delete[] oldGrid;
-            delete[] newGrid;
         }
 
         auto benchmarkResult = BenchmarkResult(measurements);
@@ -339,16 +341,17 @@ namespace GameOfLife {
         gridResult.reserve(size);
         // TODO: Build result
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
+            auto startIndex = size + 3 + 64 + (i * 2) + (i * 64) + (i * size);
             std::vector<Cell> row;
             row.reserve(size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
-                row.emplace_back(static_cast<Cell>(rawGrid[pos]));
+                row.emplace_back(static_cast<Cell>(oldGrid[pos]));
             }
             gridResult.emplace_back(row);
         }
-        delete[] rawGrid;
+        delete[] oldGrid;
+        delete[] newGrid;
         // for (auto i = 0; i < size; ++i) {
         //     auto startIndex = size + 3 + (i * 2) + (i * size);
         //     std::vector<Cell> row;
