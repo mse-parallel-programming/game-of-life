@@ -34,8 +34,7 @@ namespace {
     ) {
         auto socketCallback = [&socket](
             int generation, int size,
-            std::vector<Cell>& oldGrid,
-            std::vector<Cell>& newGrid
+            const CellA* oldGrid, const CellA* newGrid
         ) {
             auto updateMsg = Message::Update::from(generation, size, oldGrid, newGrid);
             json updateMsgJson = updateMsg;

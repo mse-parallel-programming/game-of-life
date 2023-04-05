@@ -32,21 +32,6 @@ namespace {
         std::cout << "  OpenMP Thread Count: " << threadCount << std::endl;
     }
 
-    int neighbourCount(int pos, int size, std::vector<Cell>& grid) {
-        int count = 0;
-        int upOffset = pos - size - 2;
-        int downOffset = pos + size + 2;
-
-        // Row about current one
-        count += grid[upOffset - 1] + grid[upOffset] + grid[upOffset + 1];
-        // Current row
-        count += grid[pos - 1] + grid[pos + 1];
-        // Row below current one
-        count += grid[downOffset - 1] + grid[downOffset] + grid[downOffset + 1];
-
-        return count;
-    }
-
     int neighbourCount(int pos, int size, const CellA* grid) {
         int count = 0;
         auto upOffset = pos - size - 2 - falseSharingPadding;
@@ -60,26 +45,6 @@ namespace {
         count += grid[downOffset - 1] + grid[downOffset] + grid[downOffset + 1];
 
         return count;
-    }
-
-    void toBeOrNotToBe(
-        int pos,
-        int aliveNeighbours,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
-    ) {
-        // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
-        if (oldGrid[pos] == ALIVE) {
-            // Any live cell with two or three live neighbours survives.
-            if (aliveNeighbours == 2 || aliveNeighbours == 3)
-                newGrid[pos] = ALIVE;
-            // All other live cells die in the next generation.
-            // Similarly, all other dead cells stay dead.
-            // -- Note: no else is needed as DEAD is the default value
-        } else if (aliveNeighbours == 3) {
-            // Any dead cell with three live neighbours becomes a live cell.
-            newGrid[pos] = ALIVE;
-        }
     }
 
     void toBeOrNotToBe(int pos, int aliveNeighbours, const CellA* oldGrid, CellA* newGrid) {
@@ -97,110 +62,35 @@ namespace {
         }
     }
 
-    void nextGeneration(
-        int size,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
-    ) {
-        // Alias `Cell` must not be of type `bool`!
-        // `std::vector<bool>` stores multiple values in 1 byte.
-        // Think about it like a compressed storage system, where every boolean value needs 1 bit.
-        // So, instead of having one element per memory block (one element per array cell),
-        // the memory layout may look like this:
-        //    std::vector<bool> v(20);
-        //    [ v[0], v[1], v[2],..., v[7] ][ v[8], v[9],..., v[15] ][ v[16], v[17], v[18], v[19] ]
-        // => Most efficient type that stores one element at each index seems `unsigned char` (1 byte)
-        // => How did was debugged? std::vector<bool> has no `data()` member to return pointer to first element
-        // https://stackoverflow.com/a/46115714
-        // https://stackoverflow.com/a/32821197
-        // But generally it is save to write to vectors from multiple threads
-        // unless no resizing is made
-        // https://stackoverflow.com/a/9954045
-        // https://stackoverflow.com/a/2951386
-
-        // TODO Speedup
-        // * Add padding to avoid false sharing
-        // * Use raw array instead of vec here
-        // * for (auto j = 0 .. => for (auto pos = startIndex ..)
-        // * Check which is faster reset new grid or write dead values in toBeOrNotTobe
-        // * Cell of int vs unsigned char
-        // Only benchmark with speedups: .\game_of_life.exe "benchmark" "10240" "10" "2" "1|2|4|6"
-
-        // auto* data = oldGrid.data();
-
-
-
-
-        // #pragma omp for collapse(1) \
-        // schedule(static)
-        #pragma omp parallel for collapse(1) \
-        schedule(static) \
-        default(none) firstprivate(size, oldGrid, newGrid)
-        for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
-            for (auto j = 0; j < size; ++j) {
-                auto pos = startIndex + j;
-                auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
-                toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
-            }
-        }
-    }
-
     void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
         #pragma omp parallel for collapse(1) \
         schedule(static) \
         default(none) firstprivate(size, oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = rowStartIndexAt(i, size);
+            auto startIndex = GameOfLife::rowStartIndexAt(i, size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
                 auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
                 toBeOrNotToBe(pos, aliveNeighbours, oldGrid, newGrid);
-            }
-        }
-    }
-
-    void flattenAndPadGrid(
-        int size,
-        const std::vector<std::vector<Cell>>& grid,
-        std::vector<Cell>& paddedGrid
-    ) {
-        for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
-            for (auto j = 0; j < size; ++j) {
-                // auto pos = (i * size) + j;
-                auto padPos = startIndex + j;
-                paddedGrid[padPos] = grid[i][j];
             }
         }
     }
 
     void flattenAndPadGrid(int size, const std::vector<std::vector<Cell>>& grid, CellA* paddedGrid) {
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = rowStartIndexAt(i, size);
+            auto startIndex = GameOfLife::rowStartIndexAt(i, size);
             for (auto j = 0; j < size; ++j) {
-                // auto pos = (i * size) + j;
                 auto padPos = startIndex + j;
                 paddedGrid[padPos] = static_cast<CellA>(grid[i][j]);
             }
         }
     }
 
-    int rowStartIndexAt(int i, int size) {
-        // Returns the index equivalent to the i_th row of a double dimensional grid
-        // Is a bit complicated as the used grid is an one dimensional array, padded with dead cells
-        // and additional bytes to mitigate false sharing.
-        // --------------------------------------------------------
-        // Returning std::size_t resulting here to performance loss
-        // `hardware_destructive_interference_size` casted to int (`falseSharingPadding)` resolves this issue.
-        return size + 3 + falseSharingPadding + (i * 2) + (i * falseSharingPadding) + (i * size);
-    }
-
     std::vector<std::vector<Cell>> gridToVec(int size, const CellA* grid) {
         std::vector<std::vector<Cell>> gridResult;
         gridResult.reserve(size);
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = rowStartIndexAt(i, size);
+            auto startIndex = GameOfLife::rowStartIndexAt(i, size);
             std::vector<Cell> row;
             row.reserve(size);
             for (auto j = 0; j < size; ++j) {
@@ -218,7 +108,6 @@ namespace {
     }
 
 
-
 }
 
 namespace GameOfLife {
@@ -228,8 +117,7 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
-            std::vector<Cell>& oldGrid,
-            std::vector<Cell>& newGrid
+            const CellA* oldGrid, const CellA* newGrid
         )>& callback
     ) {
         std::cout << "Game of Life" << std::endl;
@@ -254,7 +142,7 @@ namespace GameOfLife {
         while (running) {
             ++generation;
             nextGeneration(size, oldGrid, newGrid);
-            // running = callback(generation, size, oldGrid, newGrid);
+            running = callback(generation, size, oldGrid, newGrid);
             std::swap(oldGrid, newGrid);
         }
 
@@ -320,6 +208,16 @@ namespace GameOfLife {
         delete[] oldGrid;
 
         return {benchmarkResult, gridResult};
+    }
+
+    int rowStartIndexAt(int i, int size) {
+        // Returns the index equivalent to the i_th row of a double dimensional grid
+        // Is a bit complicated as the used grid is an one dimensional array, padded with dead cells
+        // and additional bytes to mitigate false sharing.
+        // --------------------------------------------------------
+        // Returning std::size_t resulting here to performance loss
+        // `hardware_destructive_interference_size` casted to int (`falseSharingPadding)` resolves this issue.
+        return size + 3 + falseSharingPadding + (i * 2) + (i * falseSharingPadding) + (i * size);
     }
 }
 

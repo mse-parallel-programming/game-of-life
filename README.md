@@ -14,6 +14,26 @@ Improvements
 
 * std vec bool => std vec unsigned char => bool[]
 
+  * 
+
+  * ```
+    // Alias `Cell` must not be of type `bool`!
+    // `std::vector<bool>` stores multiple values in 1 byte.
+    // Think about it like a compressed storage system, where every boolean value needs 1 bit.
+    // So, instead of having one element per memory block (one element per array cell),
+    // the memory layout may look like this:
+    //    std::vector<bool> v(20);
+    //    [ v[0], v[1], v[2],..., v[7] ][ v[8], v[9],..., v[15] ][ v[16], v[17], v[18], v[19] ]
+    // => Most efficient type that stores one element at each index seems `unsigned char` (1 byte)
+    // => How did was debugged? std::vector<bool> has no `data()` member to return pointer to first element
+    // https://stackoverflow.com/a/46115714
+    // https://stackoverflow.com/a/32821197
+    // But generally it is save to write to vectors from multiple threads
+    // unless no resizing is made
+    // https://stackoverflow.com/a/9954045
+    // https://stackoverflow.com/a/2951386
+    ```
+
   * vec should have same performance as array when not resizing but rewriting gave a small boost
 
 * writing all values to temporary grid is faster than reseting temporary grid to dead and setting only alive values

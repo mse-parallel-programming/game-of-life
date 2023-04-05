@@ -43,8 +43,6 @@ namespace {
         CellA* paddedGrid
     );
 
-    int rowStartIndexAt(int i, int size);
-
     std::vector<std::vector<Cell>> gridToVec(int size, const CellA* grid);
 }
 
@@ -55,8 +53,7 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
-            std::vector<Cell>& oldGrid,
-            std::vector<Cell>& newGrid
+            const CellA* oldGrid, const CellA* newGrid
         )>& callback
     );
 
@@ -71,6 +68,8 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const BenchmarkInput& benchmarkInput
     );
+
+    int rowStartIndexAt(int i, int size);
 };
 
 #endif //PPR_GAME_OF_LIFE_GAMEOFLIFE_H

@@ -6,108 +6,171 @@
 #include "../src/gameoflife/GameOfLife.h"
 #include "../src/util/Input.h"
 
-
-
-// Demonstrate some basic assertions.
-TEST(HelloTest, BasicAssertions) {
-    // Expect two strings not to be equal.
-    EXPECT_STRNE("hello", "world");
-    // Expect equality.
-    EXPECT_EQ(7 * 6, 42);
-
-    std::string textInput = ".........."
-                            "...**....."
-                            "....*....."
-                            ".........."
-                            ".........."
-                            "...**....."
-                            "..**......"
-                            ".....*...."
-                            "....*....."
-                            "..........";
-
+std::string gameOfLife(const std::string& textInput, int generations) {
     auto input = Util::textInput(textInput);
-    auto benchmarkInput = GameOfLife::BenchmarkInput {1, 1};
+    auto benchmarkInput = GameOfLife::BenchmarkInput{1, generations};
 
     auto result = GameOfLife::benchmarkWithGrid(input, std::nullopt, benchmarkInput);
-    auto actual = Util::toText(std::get<1>(result));
+    return Util::toText(std::get<1>(result));
+}
 
+std::string textInput = ".........."
+                        "...**....."
+                        "....*....."
+                        ".........."
+                        ".........."
+                        "...**....."
+                        "..**......"
+                        ".....*...."
+                        "....*....."
+                        "..........";
+
+TEST(GameOfLife, Generation1) {
     std::string expected = ".........."
-                         "...**....."
-                         "...**....."
-                         ".........."
-                         ".........."
-                         "..***....."
-                         "..**......"
-                         "...**....."
-                         ".........."
-                         "..........";
-
+                           "...**....."
+                           "...**....."
+                           ".........."
+                           ".........."
+                           "..***....."
+                           "..**......"
+                           "...**....."
+                           ".........."
+                           "..........";
+    auto actual = gameOfLife(textInput, 1);
     EXPECT_EQ(actual, expected);
 }
 
-TEST(HelloTest2, BasicAssertions) {
-    std::string textInput = ".........."
-                            ".........."
-                            ".........."
-                            ".........."
-                            ".....*...."
-                            "......*..."
-                            "....***..."
-                            ".........."
-                            ".........."
-                            "..........";
-
-    auto input = Util::textInput(textInput);
-    auto benchmarkInput = GameOfLife::BenchmarkInput {1, 1};
-
-    auto result = GameOfLife::benchmarkWithGrid(input, std::nullopt, benchmarkInput);
-    auto actual = Util::toText(std::get<1>(result));
-
+TEST(GameOfLife, Generation2) {
     std::string expected = ".........."
+                           "...**....."
+                           "...**....."
                            ".........."
+                           "...*......"
+                           "..*.*....."
                            ".........."
+                           "..***....."
                            ".........."
+                           "..........";
+    auto actual = gameOfLife(textInput, 2);
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(GameOfLife, Generation3) {
+    std::string expected = ".........."
+                           "...**....."
+                           "...**....."
+                           "...**....."
+                           "...*......"
+                           "...*......"
+                           "..*.*....."
+                           "...*......"
+                           "...*......"
+                           "..........";
+    auto actual = gameOfLife(textInput, 3);
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(GameOfLife, Generation4) {
+    std::string expected = ".........."
+                           "...**....."
+                           "..*..*...."
+                           "..*......."
+                           "..**......"
+                           "..***....."
+                           "..*.*....."
+                           "..***....."
                            ".........."
-                           "....*.*..."
-                           ".....**..."
+                           "..........";
+    auto actual = gameOfLife(textInput, 4);
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(GameOfLife, Generation5) {
+    std::string expected = ".........."
+                           "...**....."
+                           "..*.*....."
+                           ".**......."
+                           ".*..*....."
+                           ".*..*....."
+                           ".*...*...."
+                           "..*.*....."
+                           "...*......"
+                           "..........";
+    auto actual = gameOfLife(textInput, 5);
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(GameOfLife, Generation6) {
+    std::string expected = ".........."
+                           "...**....."
+                           ".**.*....."
+                           ".**......."
+                           "**.*......"
+                           "***.**...."
+                           ".*****...."
+                           "..***....."
+                           "...*......"
+                           "..........";
+    auto actual = gameOfLife(textInput, 6);
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(GameOfLife, Generation7) {
+    std::string expected = ".........."
+                           "..***....."
+                           ".*..*....."
+                           ".........."
+                           "...**....."
                            ".....*...."
-                           ".........."
+                           "*........."
+                           ".*...*...."
+                           "..***....."
                            "..........";
-
+    auto actual = gameOfLife(textInput, 7);
     EXPECT_EQ(actual, expected);
-
 }
 
-TEST(HelloTest3, BasicAssertions) {
-    std::string textInput = ".........."
-                            ".........."
-                            ".........."
-                            ".........."
-                            ".....*...."
-                            "......*..."
-                            "....***..."
-                            ".........."
-                            ".........."
-                            "..........";
-
-    auto input = Util::textInput(textInput);
-    auto benchmarkInput = GameOfLife::BenchmarkInput {1, 2};
-
-    auto result = GameOfLife::benchmarkWithGrid(input, std::nullopt, benchmarkInput);
-    auto actual = Util::toText(std::get<1>(result));
-
-    std::string expected = ".........."
+TEST(GameOfLife, Generation8) {
+    std::string expected = "...*......"
+                           "..***....."
+                           "..*.*....."
+                           "...**....."
+                           "....*....."
+                           "....*....."
                            ".........."
-                           ".........."
-                           ".........."
-                           ".........."
-                           "......*..."
-                           "....*.*..."
-                           ".....**..."
-                           ".........."
-                           "..........";
-
+                           ".****....."
+                           "..***....."
+                           "...*......";
+    auto actual = gameOfLife(textInput, 8);
     EXPECT_EQ(actual, expected);
+}
 
+TEST(GameOfLife, Generation9) {
+    std::string expected = "..***....."
+                           "..*.*....."
+                           "..*..*...."
+                           "....**...."
+                           "....**...."
+                           ".........."
+                           "..*.*....."
+                           ".*..*....."
+                           ".*........"
+                           "..***.....";
+    auto actual = gameOfLife(textInput, 9);
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(GameOfLife, Generation10) {
+    std::string expected = "..*.*....."
+                           ".**.**...."
+                           ".....*...."
+                           "...*..*..."
+                           "....**...."
+                           "...***...."
+                           "...*......"
+                           ".***......"
+                           ".*..*....."
+                           "..**......";
+    auto actual = gameOfLife(textInput, 10);
+    EXPECT_EQ(actual, expected);
 }

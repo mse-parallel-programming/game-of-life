@@ -9,6 +9,7 @@
 #include <vector>
 #include "../global.h"
 #include "json.hpp"
+#include "../gameoflife/GameOfLife.h"
 
 using json = nlohmann::json;
 
@@ -20,12 +21,12 @@ namespace Message {
         static Update from(
             int generation,
             int size,
-            const std::vector<Cell>& oldGrid,
-            const std::vector<Cell>& newGrid
+            const CellA* oldGrid,
+            const CellA* newGrid
         ) {
             std::map<int, std::vector<int>> diff;
             for (auto i = 0; i < size; ++i) {
-                auto startIndex = size + 3 + (i * 2) + (i * size);
+                auto startIndex = GameOfLife::rowStartIndexAt(i, size);
                 std::vector<int> rowDiff;
                 for (auto j = 0; j < size; ++j) {
                     auto pos = startIndex + j;
