@@ -113,24 +113,13 @@ Strangely, which improved performance the most was to use a standard `bool` arra
 
 Why this change resulted in such improvements is quite speculative on our end. At the end of day, a vector is an abstraction over a standard array and each abstraction will add some overhead, even so slightly. Even a slightly increased time for index accesses/writes accumulates  when they are performed many times, as is the case in the game of life. Maybe the used `MinGW w64 9.0` toolchain optimizes standard arrays better than vectors in combination with openmp. But this are just assumptions that would require more research.
 
-### Reseting new grid
+### No more resetting
 
+In the implementation at the time of the interim presentation the method that determined cell state and performed write operations, the `toBeOrNotToBe` method invoked in `nextGeneration`, only wrote alive cell values because the new grid was reset sequentially to a grid with only dead values after each generation. The idea was that a reset via `std::fill(newGrid.begin(), newGrid.end(), DEAD)` is quite fast, [as it can dump 16 bytes at a time](https://stackoverflow.com/a/8848612), and would speedup row evaluations as dead values would not be written anymore. 
 
+However, this assumption was wrong, as when removing the reset code and writing both alive/dead cell values in `toBeOrNotToBe` performance average runtime was improved by about 5-10 % in best cases. One reason could be that worker threads that wrote less cells were finished more early that ones that wrote more but at the end one must wait for all workers. Thus this premature optimization with the grid reset could lead to work imbalance plus the additional sequential overhead of `std::fill` even when it is cheap. 
 
-
-
-
-
-
-
-
-
-// But generally it is save to write to vectors from multiple threads
-// unless no resizing is made
-// https://stackoverflow.com/a/9954045
-// https://stackoverflow.com/a/2951386
-
-
+### 
 
 
 
