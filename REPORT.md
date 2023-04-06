@@ -119,7 +119,84 @@ In the implementation at the time of the interim presentation the method that de
 
 However, this assumption was wrong, as when removing the reset code and writing both alive/dead cell values in `toBeOrNotToBe` performance average runtime was improved by about 5-10 % in best cases. One reason could be that worker threads that wrote less cells were finished more early that ones that wrote more but at the end one must wait for all workers. Thus this premature optimization with the grid reset could lead to work imbalance plus the additional sequential overhead of `std::fill` even when it is cheap. 
 
-### 
+### False sharing padding
+
+As mentioned in the *Grid & Boundary Checks* section, the one dimensional grid also contains padding for each logical row. On most machines 64 elements occupying 64 bytes  in total (determined by `std::hardware_destructive_interference_size`) are added per row so one can be certain that multiple worker threads do not write to the same cache line. 
+
+Regarding performance, no real difference was observed with or without false sharing padding. However, machines with more cores and/or wider cache lines could profit more from this measure then the used machine with an mobile six core processor.
+
+### Other Considerations
+
+Following considerations were also made but were reverted as no benefit or even worse performance was observed.
+
+#### Rearrange OpenMP
+
+Quite a few [posts](https://stackoverflow.com/a/13846821) mention that is better to have a wider parallel region to avoid creation/destruction of working threads. So following code (simplified for clarity) was rearranged like follows:
+
+```c++
+for (auto g = 0; g < generations; ++g) {
+    #pragma omp parallel for collapse(1) \
+    schedule(static) \
+    default(none) firstprivate(size, oldGrid, newGrid)
+    for (auto i = 0; i < size; ++i) {
+        // Cell calculations
+    }  
+    std::swap(oldGrid, newGrid);
+}
+```
+
+```c++
+#pragma omp parallel default(none) firstprivate(generations, size) shared(oldGrid, newGrid)
+{
+    for (auto g = 0; g < generations; ++g) {
+    	#pragma omp for schedule(static)
+        for (auto i = 0; i < size; ++i) {
+        	// Cell calculations
+        }
+        // Swap only once and create synchronization barrier
+        #pragma omp single
+        {
+            std::swap(oldGrid, newGrid);
+        }
+    }
+}
+```
+
+The new approach is a bit more verbose and no real performance difference was observed, therefore the change was reverted. [Most compilers use by default a thread pool internally for openmp](https://stackoverflow.com/a/24756350) so the restructuring is not needed as threads are created once and then reused.
+
+#### ALIVE/DEAD Constants
+
+One bizarre optimisation measure was to change how constants are handled. Instead of writing `true` or `false` following constants were used:
+
+```c++
+// global.h
+extern const bool ALIVE;
+extern const bool DEAD;
+// global.cpp
+const bool ALIVE = true;
+const bool DEAD = false;
+```
+
+There are implicitly shared in openmp and the considerations were made to use the define directive to substitute the values by the pre-processor. This optimization measure in itself was unnecessary as there was no real performance difference between the constants and using `true`/`false` by itself but was made nonetheless to be safe. 
+
+```c++
+#define ALIVE true
+#define DEAD false
+```
+
+However, what was more baffling is, that the new approach crippled performance really bad. Maybe the combination of openmp compiler directives with defined values resulted in unoptimizable code but that is pure speculation. This change was quickly reverted and not investigated further.
+
+## Improved Benchmarks
+
+Disable turbo boost aaahh
+
+
+
+old benchmarks with new implemenation
+
+
+
+big sizes is key
 
 
 
