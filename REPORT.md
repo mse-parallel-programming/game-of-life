@@ -2,6 +2,7 @@
   <p>Balint Taschner | Kacper Urbaniec | PPR | 06.04.2023</p>
   <h1><ins>Game of Life</ins></h1>
 </div>
+
 ## Problem domain
 
 From [Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life):
@@ -89,7 +90,7 @@ In order to investigate the problem, the idea was to analyse the underlying arra
 
 This means that when two worker threads access for example indices 8 & 15 and write at the same time one write attempt would be lost. 
 
-The fix was to use `std::vector<unsigned char>` to get an array where each value occupies 1 byte. This lead to correct results of parallel executions. 
+The fix was to use `std::vector<unsigned char>` to get an array where each value occupies 1 byte. This lead to correct results of parallel executions. 
 
 ## Improvements
 
@@ -113,13 +114,13 @@ Strangely, which improved performance the most was to use a standard `bool` arra
 
 Why this change resulted in such improvements is quite speculative on our end. At the end of day, a vector is an abstraction over a standard array and each abstraction will add some overhead, even so slightly. Even a slightly increased time for index accesses/writes accumulates  when they are performed many times, as is the case in the game of life. Maybe the used `MinGW w64 9.0` toolchain optimizes standard arrays better than vectors in combination with openmp. But this are just assumptions that would require more research.
 
-### No more resetting
+### No more Resetting
 
 In the implementation at the time of the interim presentation the method that determined cell state and performed write operations, the `toBeOrNotToBe` method invoked in `nextGeneration`, only wrote alive cell values because the new grid was reset sequentially to a grid with only dead values after each generation. The idea was that a reset via `std::fill(newGrid.begin(), newGrid.end(), DEAD)` is quite fast, [as it can dump 16 bytes at a time](https://stackoverflow.com/a/8848612), and would speedup row evaluations as dead values would not be written anymore. 
 
 However, this assumption was wrong, as when removing the reset code and writing both alive/dead cell values in `toBeOrNotToBe` performance average runtime was improved by about 5-10 % in best cases. One reason could be that worker threads that wrote less cells were finished more early that ones that wrote more but at the end one must wait for all workers. Thus this premature optimization with the grid reset could lead to work imbalance plus the additional sequential overhead of `std::fill` even when it is cheap. 
 
-### False sharing padding
+### False Sharing Padding
 
 As mentioned in the *Grid & Boundary Checks* section, the one dimensional grid also contains padding for each logical row. On most machines 64 elements occupying 64 bytes  in total (determined by `std::hardware_destructive_interference_size`) are added per row so one can be certain that multiple worker threads do not write to the same cache line. 
 
@@ -166,7 +167,7 @@ The new approach is a bit more verbose and no real performance difference was ob
 
 #### ALIVE/DEAD Constants
 
-One bizarre optimisation measure was to change how constants are handled. Instead of writing `true` or `false` following constants were used:
+One bizarre optimisation measure was to change how constants are handled. Instead of writing `true` or `false` following constants were used:
 
 ```c++
 // global.h
@@ -202,27 +203,25 @@ Very important is this statement, especially considering the benchmarks were per
 
 The used [i7-8750H CPU has a base frequency of 2.20 GHz but a max turbo boost of 4.10 GHz](https://www.intel.com/content/www/us/en/products/sku/134906/intel-core-i78750h-processor-9m-cache-up-to-4-10-ghz/specifications.html). When running the benchmarks one could see in real-time that clock speeds were rapidly dropping the more threads were used. Benchmark runs with one configured thread run at about 3.8 GHz were as runs with 6 or more configured threads were just above the base frequency. Such stark differences would probably not be observed on desktop chips or mobile processors with a lower TPD. So in order to provide a more fair testing environment the turbo boost feature was disabled in the BIOS so that all benchmarks would run at 2.20 GHz.
 
-
+With turbo boost disabled the new benchmark results show more clearly the trend that a higher grid size can result in higher speedups as it is the main parallelization aspect. One can also see that for smaller grid sizes the parallelization overhead is much more noticeable than for higher ones but still a speedup is achieved, even when only by little. 
 
 ![](.img/re-benchmark-1.png)
 
 ![](.img/re-benchmark-2.png)
 
-
-
 ### Bigger Test Data
 
+One aspect when benchmarking is that test data is big enough. With a grid of 2048x2048 a speedup of 4.10 was achieved. What if one goes beyond this size even further? 
 
-
-
-
-big sizes is key
+The following benchmarks show runs with quite large grids. They continue the trend of the previous benchmarks and one can observe even better speedups, gradually approaching the theoretical maximum.
 
 ![](.img/benchmark-1.png)
 
 ![](.img/benchmark-2.png)
 
+### Raw Data
 
+Raw data to benchmark runs can be found in [`RAWDATA.md`](./RAWDATA.md).
 
 ## Sources
 
@@ -230,8 +229,6 @@ big sizes is key
 * Victor Eijkhout, Topics in Parallel and Distributed Computing, Chapter 10
   Parallel Programming Illustrated Through Conway’s
   Game of Life
+* https://cplusplus.com/reference/vector/vector-bool/
 * https://stackoverflow.com/a/46115714
 * https://www.intel.com/content/www/us/en/gaming/resources/turbo-boost.html
-
-## Raw Data
-
