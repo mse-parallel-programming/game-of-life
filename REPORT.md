@@ -41,7 +41,7 @@ def life_generation( board,tmp ):
 			board[i,j] = life_evaluation( tmp[i-1:i+1,j-1:j+1] 
 ```
 
-Our final solution bears strong resemblances, performing the parallelization also on rows via OpenMP, however instead of copying the board grid & temporary one, the pointer are just swapped. 
+Our final solution bears strong resemblances, performing the parallelization also on rows via OpenMP, however instead of copying the board grid & temporary one, the pointers are just swapped. 
 
 ```c++
 void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
@@ -71,19 +71,68 @@ The downsides of the implementation & the general problem with the game of life 
 
 Conway designed the game for an infinite grid. However, memory is finite so a strategy must be made. Our implementation uses the most basic solution, the provided grid cannot be resized and every cell outside the grid is assumed dead. 
 
-To avoid border checking and improve performance the grid is padded around with dead cells. So an input grid of 3x3 becomes internally 5x5, but iterations are only performed on the original 3x3 indices. To be precise, our implementation uses an one-dimensional array that is logically handled like a two dimensional array which streamlines memory allocation/deallocation. Also, later implementations also introduced an padding for each logical row to be absolutely sure that writing operations on neighbouring rows evaluated by different worker threads do not invalidate cache lines. So the final representation of the grid can be visualized as the following:
+To avoid border checking and improve performance the grid is padded around with dead cells. So an input grid of 3x3 becomes internally 5x5, but iterations are only performed on the original 3x3 indices. To be precise, our implementation uses an one-dimensional array that is logically handled like a two-dimensional array which streamlines memory allocation/deallocation. Also, later implementations also introduced a padding for each logical row to be absolutely sure that writing operations on neighbouring rows evaluated by different worker threads do not invalidate cache lines. So the final representation of the grid can be visualized as the following:
 
 # TODO illustration
 
 
 
+### Troubles with class template specification `std::vector<bool>`
+
+The first attempt at the game of life problem definition used internally `std::vector<bool>` to process the grid. The vector was shared by multiple workers via reference and could be written simultaneous. In theory, this should be no problem as no thread writes to the same index as another one, however the parallel results often contained erroneous cell values. 
+
+In order to investigate the problem, the idea was to analyse the underlying array via [`std::vector's data`](https://en.cppreference.com/w/cpp/container/vector/data) method. Surprisingly, there was no implementation for it, because the [vector of bool is a specialized version of vector](https://cplusplus.com/reference/vector/vector-bool/). This lead to the following [stackoverflow post](https://stackoverflow.com/a/46115714), which explains it quite well:
+
+>  *[`std::vector`](http://www.cplusplus.com/reference/vector/vector-bool/) stores multiple values in 1 byte. Think about it like a compressed storage system, where every boolean  value needs 1 bit. So, instead of having one element per memory block  (one element per array cell), the memory layout may look like this:*
+>
+> ![](.img/vecbool.png)
+
+This means that when two worker threads access for example indices 8 & 15 and write at the same time one write attempt would be lost. 
+
+The fix was to use `std::vector<unsigned char>` to get an array where each value occupies 1 byte. This lead to correct results of parallel executions. 
+
+## Improvements
+
+The following benchmarks were presented at the interim presentation. The average runtime is tolerable but the achieved speedup is quite low and worse than expected. 
+
+> Benchmarks were performed on a mobile Intel i7-8750H CPU (6 Total Cores / 12 Total Threads).
+
+![](.img/initial-benchmark-1.png)
+
+![](.img/initial-benchmark-2.png)
+
+As mentioned earlier, parallel execution is only applicable within a generation, after that workers must wait for each other before starting evaluating a new generation. So grid size is the main parameter for parallelization, as rows are divided evenly between workers when evaluation cells, and not the number of generations. This trend can be observed in the benchmarks; higher grid size results in higher speedup. However a speedup of factor 3 on a 6 core CPU is still underwhelming. Therefore some improvements were made in the codebase & benchmark methodology. 
+
+### Vector to Array
+
+The consensus seems that there should be no performance penalty using a `std::vector` over a standard array. When no resize is happening (e.g. pushing new elements, which was not done in the code), there should be no observable difference.
+
+After using `std::vector<unsigned char>` to omit the problems related the specialisation of `std::vector<bool>` other vector types were used like `std::vector<int>` to check if different memory alignments [(`unsigned char` takes 1 byte, `int` takes 4)](https://en.cppreference.com/w/cpp/language/types) affect performance but no effects were observed.
+
+Strangely, which improved performance the most was to use a standard `bool` array. Instead of passing the grid vectors via shared references to openmp, with pointers one could use now private variables initialized via `firstprivate` to share the grid pointers of the arrays. In some best cases it could improve average runtime by about 20-30 % depending on the parameters. 
+
+Why this change resulted in such improvements is quite speculative on our end. At the end of day, a vector is an abstraction over a standard array and each abstraction will add some overhead, even so slightly. Even a slightly increased time for index accesses/writes accumulates  when they are performed many times, as is the case in the game of life. Maybe the used `MinGW w64 9.0` toolchain optimizes standard arrays better than vectors in combination with openmp. But this are just assumptions that would require more research.
+
+### Reseting new grid
 
 
-To be absolutely sure that no false sharing is happening, 
 
 
 
-### ``
+
+
+
+
+
+
+// But generally it is save to write to vectors from multiple threads
+// unless no resizing is made
+// https://stackoverflow.com/a/9954045
+// https://stackoverflow.com/a/2951386
+
+
+
+
 
 
 
@@ -93,3 +142,7 @@ To be absolutely sure that no false sharing is happening,
 * Victor Eijkhout, Topics in Parallel and Distributed Computing, Chapter 10
   Parallel Programming Illustrated Through Conway’s
   Game of Life
+* https://stackoverflow.com/a/46115714
+
+## Raw Data
+
