@@ -3,6 +3,10 @@
   <h1><ins>Game of Life</ins></h1>
 </div>
 
+## 📚 Report
+
+Report on approach, implementation details, failed attempts & benchmarks can be founder under [`REPORT.md`](REPORT.md).
+
 ## 🛠️ Build
 
 ```bash
