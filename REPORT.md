@@ -95,7 +95,7 @@ The fix was to use `std::vector<unsigned char>` to get an array where each valu
 
 The following benchmarks were presented at the interim presentation. The average runtime is tolerable but the achieved speedup is quite low and worse than expected. 
 
-> Benchmarks were performed on a mobile Intel i7-8750H CPU (6 Total Cores / 12 Total Threads).
+> Benchmarks were performed on a mobile Intel i7-8750H CPU (6 Total Cores / 12 Total Threads). All runs besides the default one [set the thread count manually and disable OpenMP dynamic to limit used threads](https://stackoverflow.com/a/11096742).
 
 ![](.img/initial-benchmark-1.png)
 
@@ -186,19 +186,41 @@ There are implicitly shared in openmp and the considerations were made to use th
 
 However, what was more baffling is, that the new approach crippled performance really bad. Maybe the combination of openmp compiler directives with defined values resulted in unoptimizable code but that is pure speculation. This change was quickly reverted and not investigated further.
 
-## Improved Benchmarks
+## Benchmarks
 
-Disable turbo boost aaahh
+With the new improved implementation in place the initial benchmark settings were run again. Results seemed promising; the average runtimes seemed to improve quite a bit however the speedups were still quite lower than the theoretical maximum, a factor of six on a six core processor. Observing the benchmark runs with task manager open helped identifying a hardware feature that kind of invalidated the benchmark results.
+
+### Turbo Boost
+
+Most modern CPUs feature frequency boost technologies like [Intel's Turbo Boost Technology](https://www.intel.com/content/www/us/en/gaming/resources/turbo-boost.html):
+
+*When handling light workloads, the CPU runs at the base frequency listed in its specifications. (Or lower, when the energy-saving Intel  SpeedStep® technology scales CPU speeds.) When handling hardware threads marked for high performance, Intel® Turbo Boost Technology increases  the clock speed up to the Max Turbo Frequency.*
+
+Very important is this statement, especially considering the benchmarks were performed on a mobile CPU with limited thermal headroom & power limit:
+
+*Note that depending on its situation, a given CPU may not always reach  its Max Turbo Frequency. The dynamic increase in speed changes depending on the workload and the thermal headroom available.*
+
+The used [i7-8750H CPU has a base frequency of 2.20 GHz but a max turbo boost of 4.10 GHz](https://www.intel.com/content/www/us/en/products/sku/134906/intel-core-i78750h-processor-9m-cache-up-to-4-10-ghz/specifications.html). When running the benchmarks one could see in real-time that clock speeds were rapidly dropping the more threads were used. Benchmark runs with one configured thread run at about 3.8 GHz were as runs with 6 or more configured threads were just above the base frequency. Such stark differences would probably not be observed on desktop chips or mobile processors with a lower TPD. So in order to provide a more fair testing environment the turbo boost feature was disabled in the BIOS so that all benchmarks would run at 2.20 GHz.
 
 
 
-old benchmarks with new implemenation
+![](.img/re-benchmark-1.png)
+
+![](.img/re-benchmark-2.png)
+
+
+
+### Bigger Test Data
+
+
 
 
 
 big sizes is key
 
+![](.img/benchmark-1.png)
 
+![](.img/benchmark-2.png)
 
 
 
@@ -209,6 +231,7 @@ big sizes is key
   Parallel Programming Illustrated Through Conway’s
   Game of Life
 * https://stackoverflow.com/a/46115714
+* https://www.intel.com/content/www/us/en/gaming/resources/turbo-boost.html
 
 ## Raw Data
 
