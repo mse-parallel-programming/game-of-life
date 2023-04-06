@@ -7,36 +7,6 @@
 
 int main(int argc, char* argv[]) {
 
-    // https://www.geeksforgeeks.org/program-for-conways-game-of-life/
-    // std::string textInput = ".........."
-    //                         "...**....."
-    //                         "....*....."
-    //                         ".........."
-    //                         ".........."
-    //                         ".........."
-    //                         ".........."
-    //                         ".........."
-    //                         ".........."
-    //                         "..........";
-    // std::string textInput = ".........."
-    //                         "...**....."
-    //                         "....*....."
-    //                         ".........."
-    //                         ".........."
-    //                         "...**....."
-    //                         "..**......"
-    //                         ".....*...."
-    //                         "....*....."
-    //                         "..........";
-    // std::string textInput = "..."
-    //                         ".*."
-    //                         "...";
-
-    // const auto input = Util::textInput(textInput);
-
-    // Server::run(1234);
-    // Benchmark::localBenchmark(1024, 2000, 10, std::vector<int> { 1 });
-
     std::vector<std::string> args(&argv[0], &argv[0 + argc]);
     args.erase(args.begin());
     auto argsCount = args.size();

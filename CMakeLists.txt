@@ -21,14 +21,21 @@ add_definitions(-DBOOST_ALL_NO_LIB)
 add_definitions(-D_WIN32_WINNT=0x0501)
 add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
 
-add_executable(game_of_life src/main.cpp src/global.cpp src/global.h src/gameoflife/GameOfLife.h src/util/Input.h src/gameoflife/types/BenchmarkResult.h src/gameoflife/types/BenchmarkInput.h src/gameoflife/types/GameInput.h src/gameoflife/GameOfLife.cpp src/messages/Start.h src/messages/Update.h src/gameoflife/types/ThreadConfig.h src/server/Server.cpp src/server/Server.h src/messages/Update.cpp src/messages/Start.cpp src/benchmark/Benchmark.cpp src/benchmark/Benchmark.h src/util/Parse.h src/messages/UpdateAck.cpp src/messages/UpdateAck.h src/messages/Benchmark.cpp src/messages/Benchmark.h)
+add_library(game_of_life_lib src/global.cpp src/global.h src/gameoflife/GameOfLife.h src/util/Input.h src/gameoflife/types/BenchmarkResult.h src/gameoflife/types/BenchmarkInput.h src/gameoflife/types/GameInput.h src/gameoflife/GameOfLife.cpp src/messages/Start.h src/messages/Update.h src/gameoflife/types/ThreadConfig.h src/server/Server.cpp src/server/Server.h src/messages/Update.cpp src/messages/Start.cpp src/benchmark/Benchmark.cpp src/benchmark/Benchmark.h src/util/Parse.h src/messages/UpdateAck.cpp src/messages/UpdateAck.h src/messages/Benchmark.cpp src/messages/Benchmark.h)
+
 
 # OpenMP
 find_package(OpenMP)
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(game_of_life PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(game_of_life_lib PUBLIC OpenMP::OpenMP_CXX)
 endif()
 # Asio
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/asio-1.26.0/include)
 # JSON for Modern C++
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/json-3.11.2)
+
+# Test
+add_subdirectory(test)
+
+add_executable(game_of_life src/main.cpp)
+target_link_libraries(game_of_life game_of_life_lib)

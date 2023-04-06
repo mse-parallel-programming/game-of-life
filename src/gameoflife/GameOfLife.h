@@ -16,54 +16,34 @@
 #include "types/BenchmarkInput.h"
 #include "types/ThreadConfig.h"
 
-// class GameOfLife {
-// public:
-//     virtual void run(
-//         int generations,
-//         int size,
-//         const std::vector<Cell>& grid,
-//         std::function<void(std::vector<Cell>)> callback
-//     );
-//
-//     virtual void benchmark(
-//         int iterations,
-//         int generations,
-//         int size,
-//         const std::vector<Cell>& grid
-//     );
-// };
-
 namespace {
     void configureOpenMp(const std::optional<GameOfLife::ThreadConfig>& threadConfig);
 
     void nextGeneration(
         int size,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
+        Cell* oldGrid,
+        Cell* newGrid
     );
 
     int neighbourCount(
         int pos, int size,
-        std::vector<Cell>& grid
+        const Cell* grid
     );
 
     void toBeOrNotToBe(
         int pos,
         int aliveNeighbours,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
+        const Cell* oldGrid,
+        Cell* newGrid
     );
 
     void flattenAndPadGrid(
         int size,
         const std::vector<std::vector<Cell>>& grid,
-        std::vector<Cell>& paddedGrid
+        Cell* paddedGrid
     );
 
-    void swapAndResetNewGrid(
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
-    );
+    std::vector<std::vector<Cell>> gridToVec(int size, const Cell* grid);
 }
 
 namespace GameOfLife {
@@ -73,8 +53,7 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
-            std::vector<Cell>& oldGrid,
-            std::vector<Cell>& newGrid
+            const Cell* oldGrid, const Cell* newGrid
         )>& callback
     );
 
@@ -89,6 +68,8 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const BenchmarkInput& benchmarkInput
     );
+
+    int rowStartIndexAt(int i, int size);
 };
 
 #endif //PPR_GAME_OF_LIFE_GAMEOFLIFE_H

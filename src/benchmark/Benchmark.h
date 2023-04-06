@@ -16,10 +16,6 @@ namespace Benchmark {
         int iterations,
         const std::vector<int>& threads
     );
-
-    GameOfLife::BenchmarkResult remoteBenchmark(
-
-    );
 }
 
 

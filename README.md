@@ -1,21 +1,38 @@
-# game-of-life
+<div align="center">
+  <p>Balint Taschner | Kacper Urbaniec | PPR | 06.04.2023</p>
+  <h1><ins>Game of Life</ins></h1>
+</div>
+
+## 📚 Report
+
+Report on approach, implementation details, failed attempts & benchmarks can be founder under [`REPORT.md`](REPORT.md).
 
 ## 🛠️ Build
 
 ```bash
 mkdir cmake-build-release
 cmake -DCMAKE_BUILD_TYPE=Release -B cmake-build-release/ .
+# game-of-life
 cmake --build cmake-build-release/ --target game_of_life -- -j 9
+# test cases
+cmake --build cmake-build-release/ --target test -- -j 9
 ```
 
 ## 🚀 Run
+
+### Test Cases
+
+```bash
+cd cmake-build-release/test
+.\test.exe
+```
 
 ### Server Mode
 
 Launch server
 
 ```bash
-cmake-build-release/
+cd cmake-build-release/
 .\game_of_lifet.exe [server] [optional: port]
 # .\game_of_life.exe "server" "1234"
 ```
@@ -34,36 +51,40 @@ Interactive Mode:
 1. Client initiates
 
    ```json
-   {
-   	input: {
-           size: int,		// size of grid
-           grid: [[bool]]	// full grid, dead=false/alive=true
-       },
-       // OPTIONAL
-       threadConfig: {
-           dynamic: bool,
-           threadCount: int
-       }
-   }
+	{
+		"input": {
+			// size of grid
+			"size": int,
+			// full grid, dead=false/alive=true
+			"grid": [[bool]]	
+		},
+		// OPTIONAL
+		"threadConfig": {
+			"dynamic": bool,
+			"threadCount": int
+		}
+	}
    ```
 
 2. Server returns diff update
 
    ```json
-   {
-       generation: int,
-       diff: [int, [int]] // "Map", contains rows and indices which need to be flipped from last grid
-   }
+	{
+		"generation": int,
+		// "Map", contains rows and indices which need to be flipped from last grid
+		"diff": [int, [int]] 
+	}
    ```
 
-   > Example: Diff `[[2, [4, 5]], [5, [7]]]` means flip (alive/dead=>dead/alive) indices 4 & 5 at row 2 and flip index 7 at row 5. Rows & indices start at 0.
+   > Example: Diff `[[2, [4, 5]], [5, [7]]]` means flip (alive/dead=>dead/alive) indices 4 & 5 at row 2 and flip index 7 at row 5. Rows & indices start at 0.
 
 3. Client acknowledges
 
    ```json
-   {
-   	next: bool // Continue to next generation?
-   }
+	{
+		// Continue to next generation?
+		"next": bool 
+	}
    ```
 
 Benchmark Mode:
@@ -71,32 +92,37 @@ Benchmark Mode:
 1. Client initiates
 
    ```json
-   {
-   	input: {
-           size: int,		// size of grid
-           grid: [[bool]]	// full grid, dead=false/alive=true
-       },
-       {
-       	iterations: int, // how many times should the algorithm be looped
-       	generations: int, // how many generations should be calculated
-   	},
-       // OPTIONAL
-       threadConfig: {
-           dynamic: bool,
-           threadCount: int
-       }
-   }
+	{
+		"input": {
+			// size of grid
+			"size": int,	
+			// full grid, dead=false/alive=true
+			"grid": [[bool]]	
+		},
+		{
+			// how many times should the algorithm be looped
+			"iterations": int, 
+			// how many generations should be calculated
+			"generations": int, 
+		},
+		// OPTIONAL
+    	"threadConfig": {
+			"dynamic": bool,
+			"threadCount": int
+		}
+	}
    ```
 
 2. Server returns result
 
    ```json
-   {
-   	grid: [[bool]], // full grid, dead=false/alive=true
-       averageTime: double,
-       minTime: double,
-       maxTime: double
-   }
+	{
+		// full grid, dead=false/alive=true
+		"grid": [[bool]], 
+		"averageTime": double,
+		"minTime": double,
+		"maxTime": double
+	}
    ```
 
    

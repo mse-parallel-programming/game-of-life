@@ -34,8 +34,7 @@ namespace {
     ) {
         auto socketCallback = [&socket](
             int generation, int size,
-            std::vector<Cell>& oldGrid,
-            std::vector<Cell>& newGrid
+            const Cell* oldGrid, const Cell* newGrid
         ) {
             auto updateMsg = Message::Update::from(generation, size, oldGrid, newGrid);
             json updateMsgJson = updateMsg;
@@ -113,7 +112,6 @@ namespace Server {
             auto input = start.input;
             auto threadConfig = start.threadConfig;
 
-            // TODO: Start benchmark mode when benchmark input is not empty
             if (auto benchmarkInput = start.benchmarkInput) {
                 // benchmark mode
                 benchmark(input, threadConfig, *benchmarkInput, socket);
@@ -121,28 +119,6 @@ namespace Server {
                 // Interactive mode
                 interactive(input, threadConfig, socket);
             }
-
-            // auto socketCallback = [&socket](
-            //     int generation, int size,
-            //     std::vector<Cell>& oldGrid,
-            //     std::vector<Cell>& newGrid
-            // ) {
-            //     auto updateMsg = Message::Update::from(generation, size, oldGrid, newGrid);
-            //     json updateMsgJson = updateMsg;
-            //     std::cout << updateMsgJson.dump() << std::endl;
-            //
-            //     try {
-            //         send(socket, updateMsgJson.dump());
-            //         auto responseJson = read(socket);
-            //         auto response = json::parse(responseJson).get<Message::UpdateAck>();
-            //         return response.next;
-            //     } catch (...) {
-            //         return false;
-            //     }
-            // };
-            //
-            // GameOfLife::run(start.input, start.threadConfig, socketCallback);
-
 
             socket.close();
         }

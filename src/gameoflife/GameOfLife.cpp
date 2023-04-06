@@ -20,78 +20,54 @@ namespace {
             threadCount = threadConfig->threadCount;
         } else {
             dynamic = true;
-            threadCount= (int) std::thread::hardware_concurrency();
+            threadCount = (int) std::thread::hardware_concurrency();
         }
 
+        // Configure openmp to used fixed thread size
         // https://stackoverflow.com/a/11096742
         omp_set_dynamic(dynamic);
         omp_set_num_threads(threadCount);
 
         std::cout << "  OpenMP Dynamic: " << dynamic << std::endl;
-        std::cout << "  OpenMP Thread Count : " << threadCount << std::endl;
+        std::cout << "  OpenMP Thread Count: " << threadCount << std::endl;
     }
 
-    int neighbourCount(int pos, int size, std::vector<Cell>& grid) {
+    int neighbourCount(int pos, int size, const Cell* grid) {
         int count = 0;
-        int upOffset = pos - size - 2;
-        int downOffset = pos + size + 2;
+        auto upOffset = pos - size - 2 - falseSharingPadding;
+        auto downOffset = pos + size + 2 + falseSharingPadding;
 
         // Row about current one
-        count += grid[upOffset-1] + grid[upOffset] + grid[upOffset+1];
+        count += grid[upOffset - 1] + grid[upOffset] + grid[upOffset + 1];
         // Current row
-        count += grid[pos-1] + grid[pos+1];
+        count += grid[pos - 1] + grid[pos + 1];
         // Row below current one
-        count += grid[downOffset-1] + grid[downOffset] + grid[downOffset+1];
+        count += grid[downOffset - 1] + grid[downOffset] + grid[downOffset + 1];
 
         return count;
     }
 
-    void toBeOrNotToBe(
-        int pos,
-        int aliveNeighbours,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
-    ) {
+    void toBeOrNotToBe(int pos, int aliveNeighbours, const Cell* oldGrid, Cell* newGrid) {
         // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
         if (oldGrid[pos] == ALIVE) {
             // Any live cell with two or three live neighbours survives.
-            if (aliveNeighbours == 2 || aliveNeighbours == 3)
-                newGrid[pos] = ALIVE;
             // All other live cells die in the next generation.
-            // Similarly, all other dead cells stay dead.
-            // -- Note: no else is needed as DEAD is the default value
-        } else if (aliveNeighbours == 3) {
+            if (aliveNeighbours == 2 || aliveNeighbours == 3) newGrid[pos] = ALIVE;
+            else newGrid[pos] = DEAD;
+        } else {
             // Any dead cell with three live neighbours becomes a live cell.
-            newGrid[pos] = ALIVE;
+            // Similarly, all other dead cells stay dead.
+            if (aliveNeighbours == 3) newGrid[pos] = ALIVE;
+            else newGrid[pos] = DEAD;
         }
     }
 
-    void nextGeneration(
-        int size,
-        std::vector<Cell>& oldGrid,
-        std::vector<Cell>& newGrid
-    ) {
-        // Alias `Cell` must not be of type `bool`!
-        // `std::vector<bool>` stores multiple values in 1 byte.
-        // Think about it like a compressed storage system, where every boolean value needs 1 bit.
-        // So, instead of having one element per memory block (one element per array cell),
-        // the memory layout may look like this:
-        //    std::vector<bool> v(20);
-        //    [ v[0], v[1], v[2],..., v[7] ][ v[8], v[9],..., v[15] ][ v[16], v[17], v[18], v[19] ]
-        // => Most efficient type that stores one element at each index seems `unsigned char` (1 byte)
-        // => How did was debugged? std::vector<bool> has no `data()` member to return pointer to first element
-        // https://stackoverflow.com/a/46115714
-        // https://stackoverflow.com/a/32821197
-        // But generally it is save to write to vectors from multiple threads
-        // unless no resizing is made
-        // https://stackoverflow.com/a/9954045
-        // https://stackoverflow.com/a/2951386
-
+    void nextGeneration(int size, Cell* oldGrid, Cell* newGrid) {
         #pragma omp parallel for collapse(1) \
         schedule(static) \
-        default(none) firstprivate(size) shared(oldGrid, newGrid)
+        default(none) firstprivate(size, oldGrid, newGrid)
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
+            auto startIndex = GameOfLife::rowStartIndexAt(i, size);
             for (auto j = 0; j < size; ++j) {
                 auto pos = startIndex + j;
                 auto aliveNeighbours = neighbourCount(pos, size, oldGrid);
@@ -100,25 +76,38 @@ namespace {
         }
     }
 
-    void flattenAndPadGrid(
-        int size,
-        const std::vector<std::vector<Cell>>& grid,
-        std::vector<Cell>& paddedGrid
-    ) {
+    void flattenAndPadGrid(int size, const std::vector<std::vector<Cell>>& grid, Cell* paddedGrid) {
         for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
+            auto startIndex = GameOfLife::rowStartIndexAt(i, size);
             for (auto j = 0; j < size; ++j) {
-                // auto pos = (i * size) + j;
                 auto padPos = startIndex + j;
-                paddedGrid[padPos] = grid[i][j];
+                paddedGrid[padPos] = static_cast<Cell>(grid[i][j]);
             }
         }
     }
 
-    void swapAndResetNewGrid(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid)  {
+    std::vector<std::vector<Cell>> gridToVec(int size, const Cell* grid) {
+        std::vector<std::vector<Cell>> gridResult;
+        gridResult.reserve(size);
+        for (auto i = 0; i < size; ++i) {
+            auto startIndex = GameOfLife::rowStartIndexAt(i, size);
+            std::vector<Cell> row;
+            row.reserve(size);
+            for (auto j = 0; j < size; ++j) {
+                auto pos = startIndex + j;
+                row.emplace_back(static_cast<Cell>(grid[pos]));
+            }
+            gridResult.emplace_back(row);
+        }
+        return gridResult;
+    }
+
+    void swapAndResetNewGrid(std::vector<Cell>& oldGrid, std::vector<Cell>& newGrid) {
         oldGrid.swap(newGrid);
         std::fill(newGrid.begin(), newGrid.end(), DEAD);
     }
+
+
 }
 
 namespace GameOfLife {
@@ -128,8 +117,7 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
-            std::vector<Cell>& oldGrid,
-            std::vector<Cell>& newGrid
+            const Cell* oldGrid, const Cell* newGrid
         )>& callback
     ) {
         std::cout << "Game of Life" << std::endl;
@@ -141,17 +129,21 @@ namespace GameOfLife {
 
         configureOpenMp(threadConfig);
 
-        std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+        auto paddedSize = (size + 2 + falseSharingPadding) * (size + 2);
+        auto* oldGrid = new Cell[paddedSize];
+        auto* newGrid = new Cell[paddedSize];
+        std::fill_n(oldGrid, paddedSize, DEAD);
         flattenAndPadGrid(size, grid, oldGrid);
-        std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+        std::fill_n(newGrid, paddedSize, DEAD);
+
 
         auto running = true;
         auto generation = 0;
-        while(running) {
+        while (running) {
             ++generation;
             nextGeneration(size, oldGrid, newGrid);
             running = callback(generation, size, oldGrid, newGrid);
-            swapAndResetNewGrid(oldGrid, newGrid);
+            std::swap(oldGrid, newGrid);
         }
 
     }
@@ -186,41 +178,46 @@ namespace GameOfLife {
 
         std::vector<std::chrono::duration<double, std::milli>> measurements;
         measurements.reserve(iterations);
-        std::vector<Cell> rawGrid;
+
+        auto paddedSize = (size + 2 + falseSharingPadding) * (size + 2);
+        auto* oldGrid = new Cell[paddedSize];
+        auto* newGrid = new Cell[paddedSize];
 
         for (auto i = 0; i < iterations; ++i) {
-            std::vector<Cell> oldGrid((size + 2) * (size + 2), DEAD);
+            std::fill_n(oldGrid, paddedSize, DEAD);
             flattenAndPadGrid(size, grid, oldGrid);
-            std::vector<Cell> newGrid((size + 2) * (size + 2), DEAD);
+            std::fill_n(newGrid, paddedSize, DEAD);
 
             auto start = std::chrono::high_resolution_clock::now();
+
             for (auto g = 0; g < generations; ++g) {
                 nextGeneration(size, oldGrid, newGrid);
-                swapAndResetNewGrid(oldGrid, newGrid);
+                std::swap(oldGrid, newGrid);
             }
-            auto end = std::chrono::high_resolution_clock::now();
 
-            measurements.emplace_back(end-start);
-            rawGrid.swap(oldGrid);
+            auto end = std::chrono::high_resolution_clock::now();
+            measurements.emplace_back(end - start);
         }
 
         auto benchmarkResult = BenchmarkResult(measurements);
         benchmarkResult.print();
 
-        std::vector<std::vector<Cell>> gridResult;
-        gridResult.reserve(size);
-        for (auto i = 0; i < size; ++i) {
-            auto startIndex = size + 3 + (i * 2) + (i * size);
-            std::vector<Cell> row;
-            row.reserve(size);
-            for (auto j = 0; j < size; ++j) {
-                auto pos = startIndex + j;
-                row.emplace_back(rawGrid[pos]);
-            }
-            gridResult.emplace_back(row);
-        }
+        auto gridResult = gridToVec(size, oldGrid);
 
-        return { benchmarkResult, gridResult };
+        delete[] newGrid;
+        delete[] oldGrid;
+
+        return {benchmarkResult, gridResult};
+    }
+
+    int rowStartIndexAt(int i, int size) {
+        // Returns the index equivalent to the i_th row of a double dimensional grid
+        // Is a bit complicated as the used grid is an one dimensional array, padded with dead cells
+        // and additional bytes to mitigate false sharing.
+        // --------------------------------------------------------
+        // Returning std::size_t resulting here to performance loss
+        // `hardware_destructive_interference_size` casted to int (`falseSharingPadding)` resolves this issue.
+        return size + 3 + falseSharingPadding + (i * 2) + (i * falseSharingPadding) + (i * size);
     }
 }
 
