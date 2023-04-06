@@ -21,29 +21,29 @@ namespace {
 
     void nextGeneration(
         int size,
-        CellA* oldGrid,
-        CellA* newGrid
+        Cell* oldGrid,
+        Cell* newGrid
     );
 
     int neighbourCount(
         int pos, int size,
-        const CellA* grid
+        const Cell* grid
     );
 
     void toBeOrNotToBe(
         int pos,
         int aliveNeighbours,
-        const CellA* oldGrid,
-        CellA* newGrid
+        const Cell* oldGrid,
+        Cell* newGrid
     );
 
     void flattenAndPadGrid(
         int size,
         const std::vector<std::vector<Cell>>& grid,
-        CellA* paddedGrid
+        Cell* paddedGrid
     );
 
-    std::vector<std::vector<Cell>> gridToVec(int size, const CellA* grid);
+    std::vector<std::vector<Cell>> gridToVec(int size, const Cell* grid);
 }
 
 namespace GameOfLife {
@@ -53,7 +53,7 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
-            const CellA* oldGrid, const CellA* newGrid
+            const Cell* oldGrid, const Cell* newGrid
         )>& callback
     );
 

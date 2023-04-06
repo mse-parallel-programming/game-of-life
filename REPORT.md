@@ -185,7 +185,7 @@ There are implicitly shared in openmp and the considerations were made to use th
 #define DEAD false
 ```
 
-However, what was more baffling is, that the new approach crippled performance really bad. Maybe the combination of openmp compiler directives with defined values resulted in unoptimizable code but that is pure speculation. This change was quickly reverted and not investigated further.
+However, what was more baffling is, that the new approach crippled performance really bad. Doubling runtime & worse.Maybe the combination of openmp compiler directives with defined values resulted in unoptimizable code but that is pure speculation. This change was quickly reverted and not investigated further.
 
 ## Benchmarks
 

@@ -32,7 +32,7 @@ namespace {
         std::cout << "  OpenMP Thread Count: " << threadCount << std::endl;
     }
 
-    int neighbourCount(int pos, int size, const CellA* grid) {
+    int neighbourCount(int pos, int size, const Cell* grid) {
         int count = 0;
         auto upOffset = pos - size - 2 - falseSharingPadding;
         auto downOffset = pos + size + 2 + falseSharingPadding;
@@ -47,7 +47,7 @@ namespace {
         return count;
     }
 
-    void toBeOrNotToBe(int pos, int aliveNeighbours, const CellA* oldGrid, CellA* newGrid) {
+    void toBeOrNotToBe(int pos, int aliveNeighbours, const Cell* oldGrid, Cell* newGrid) {
         // https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules
         if (oldGrid[pos] == ALIVE) {
             // Any live cell with two or three live neighbours survives.
@@ -62,7 +62,7 @@ namespace {
         }
     }
 
-    void nextGeneration(int size, CellA* oldGrid, CellA* newGrid) {
+    void nextGeneration(int size, Cell* oldGrid, Cell* newGrid) {
         #pragma omp parallel for collapse(1) \
         schedule(static) \
         default(none) firstprivate(size, oldGrid, newGrid)
@@ -76,17 +76,17 @@ namespace {
         }
     }
 
-    void flattenAndPadGrid(int size, const std::vector<std::vector<Cell>>& grid, CellA* paddedGrid) {
+    void flattenAndPadGrid(int size, const std::vector<std::vector<Cell>>& grid, Cell* paddedGrid) {
         for (auto i = 0; i < size; ++i) {
             auto startIndex = GameOfLife::rowStartIndexAt(i, size);
             for (auto j = 0; j < size; ++j) {
                 auto padPos = startIndex + j;
-                paddedGrid[padPos] = static_cast<CellA>(grid[i][j]);
+                paddedGrid[padPos] = static_cast<Cell>(grid[i][j]);
             }
         }
     }
 
-    std::vector<std::vector<Cell>> gridToVec(int size, const CellA* grid) {
+    std::vector<std::vector<Cell>> gridToVec(int size, const Cell* grid) {
         std::vector<std::vector<Cell>> gridResult;
         gridResult.reserve(size);
         for (auto i = 0; i < size; ++i) {
@@ -117,7 +117,7 @@ namespace GameOfLife {
         const std::optional<ThreadConfig>& threadConfig,
         const std::function<bool(
             int generation, int size,
-            const CellA* oldGrid, const CellA* newGrid
+            const Cell* oldGrid, const Cell* newGrid
         )>& callback
     ) {
         std::cout << "Game of Life" << std::endl;
@@ -130,8 +130,8 @@ namespace GameOfLife {
         configureOpenMp(threadConfig);
 
         auto paddedSize = (size + 2 + falseSharingPadding) * (size + 2);
-        auto* oldGrid = new CellA[paddedSize];
-        auto* newGrid = new CellA[paddedSize];
+        auto* oldGrid = new Cell[paddedSize];
+        auto* newGrid = new Cell[paddedSize];
         std::fill_n(oldGrid, paddedSize, DEAD);
         flattenAndPadGrid(size, grid, oldGrid);
         std::fill_n(newGrid, paddedSize, DEAD);
@@ -180,8 +180,8 @@ namespace GameOfLife {
         measurements.reserve(iterations);
 
         auto paddedSize = (size + 2 + falseSharingPadding) * (size + 2);
-        auto* oldGrid = new CellA[paddedSize];
-        auto* newGrid = new CellA[paddedSize];
+        auto* oldGrid = new Cell[paddedSize];
+        auto* newGrid = new Cell[paddedSize];
 
         for (auto i = 0; i < iterations; ++i) {
             std::fill_n(oldGrid, paddedSize, DEAD);

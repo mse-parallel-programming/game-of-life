@@ -21,8 +21,8 @@ namespace Message {
         static Update from(
             int generation,
             int size,
-            const CellA* oldGrid,
-            const CellA* newGrid
+            const Cell* oldGrid,
+            const Cell* newGrid
         ) {
             std::map<int, std::vector<int>> diff;
             for (auto i = 0; i < size; ++i) {

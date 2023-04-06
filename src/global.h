@@ -9,13 +9,8 @@
 // https://stackoverflow.com/questions/2268749/defining-global-constant-in-c
 extern const bool ALIVE;
 extern const bool DEAD;
-// TODO: Investigate define is much slower than global const variable?
-// #define ALIVE true
-// #define DEAD false
-// https://stackoverflow.com/a/32821197
-typedef unsigned char Cell;
-typedef bool CellA;
-// typedef int Cell;
+
+typedef bool Cell;
 
 // Minimum offset between two objects to avoid false sharing
 // https://en.cppreference.com/w/cpp/thread/hardware_destructive_interference_size
