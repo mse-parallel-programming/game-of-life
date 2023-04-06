@@ -74,9 +74,7 @@ Conway designed the game for an infinite grid. However, memory is finite so a st
 
 To avoid border checking and improve performance the grid is padded around with dead cells. So an input grid of 3x3 becomes internally 5x5, but iterations are only performed on the original 3x3 indices. To be precise, our implementation uses an one-dimensional array that is logically handled like a two-dimensional array which streamlines memory allocation/deallocation. Also, later implementations also introduced a padding for each logical row to be absolutely sure that writing operations on neighbouring rows evaluated by different worker threads do not invalidate cache lines. So the final representation of the grid can be visualized as the following:
 
-# TODO illustration
-
-
+![](.img/grid.png)
 
 ### Troubles with class template specification `std::vector<bool>`
 
@@ -94,7 +92,7 @@ The fix was to use `std::vector<unsigned char>` to get an array where each value
 
 ## Improvements
 
-The following benchmarks were presented at the interim presentation. The average runtime is tolerable but the achieved speedup is quite low and worse than expected. 
+The following benchmarks were presented at the [interim presentation](https://docs.google.com/presentation/d/1Dz9J-74cFxwajnAQ61yJIGTDnNab2eYyysM42fTp0qE/edit?usp=sharing). The average runtime is tolerable but the achieved speedup is quite low and worse than expected. 
 
 > Benchmarks were performed on a mobile Intel i7-8750H CPU (6 Total Cores / 12 Total Threads). All runs besides the default one [set the thread count manually and disable OpenMP dynamic to limit used threads](https://stackoverflow.com/a/11096742).
 
@@ -185,7 +183,7 @@ There are implicitly shared in openmp and the considerations were made to use th
 #define DEAD false
 ```
 
-However, what was more baffling is, that the new approach crippled performance really bad. Doubling runtime & worse.Maybe the combination of openmp compiler directives with defined values resulted in unoptimizable code but that is pure speculation. This change was quickly reverted and not investigated further.
+However, what was more baffling is, that the new approach crippled performance really bad. Doubling runtime & worse. Maybe the combination of openmp compiler directives with defined values resulted in unoptimizable code but that is pure speculation. This change was quickly reverted and not investigated further.
 
 ## Benchmarks
 
