@@ -1,4 +1,7 @@
-# game-of-life
+<div align="center">
+  <p>Balint Taschner | Kacper Urbaniec | PPR | 06.04.2023</p>
+  <h1><ins>Game of Life</ins></h1>
+</div>
 
 ## TODO Report
 
