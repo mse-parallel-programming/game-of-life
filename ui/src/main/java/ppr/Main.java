@@ -1,6 +1,18 @@
 package ppr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 import ppr.messages.*;
 import ppr.util.Input;
 
@@ -9,15 +21,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 /**
  * @author Kacper Urbaniec
  * @version 2023-03-24
  */
-public class Main {
+public class Main  extends  Application{
+    private static int size = 10;
+    private static int generationCount = 0;
+    private static GridPane grid = new GridPane();
+    private static Label generationLabel = new Label();
+    private static int width = 600;
+    private static int height = 600;
+
     public static void main(String[] args) {
 
         StartMessage start;
@@ -34,8 +53,8 @@ public class Main {
                     ".....*...." +
                     "....*....." +
                     "..........";
-            var size = 10;
             var grid = Input.textInput(textInput);
+
 
             start = new StartMessage();
             var input = new GameInput();
@@ -81,8 +100,11 @@ public class Main {
         ) {
             // TODO: exit? error handling?
 
-            if (start.benchmarkInput == null)
+            if (start.benchmarkInput == null) {
+                Thread launchThread = new Thread(() -> launch(args));
+                launchThread.start();
                 interactive(startJson, grid, 10, out, in);
+            }
             else
                 benchmark(startJson, grid, out, in);
 
@@ -110,6 +132,10 @@ public class Main {
             update.updateGrid(grid);
             // Visualize grid
             String gridString = gridString(grid);
+            createChessboard(grid);
+            Platform.runLater(() -> {
+                generationLabel.setText("Generation: " + update.generation);
+            });
             System.out.println(update.generation);
             System.out.println(gridString);
 
@@ -155,5 +181,84 @@ public class Main {
                         .collect(Collectors.joining(" ", "", "\n"))
                 )
                 .collect(Collectors.joining(""));
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        // Create the chessboard
+        createChessboard(null);
+
+        // Create the Start and Next buttons
+        Button startButton = new Button("Start");
+        Button nextButton = new Button("Next");
+        startButton.setOnAction(e -> handleStartButtonClick());
+        nextButton.setOnAction(e -> handleNextButtonClick());
+
+        // Create the generation counter label
+        generationLabel = new Label("Generation: " + generationCount);
+
+        // Create the layout
+        GridPane layout = new GridPane();
+        layout.setAlignment(Pos.CENTER);
+        layout.add(grid, 0, 0, 3, 1);
+        layout.add(startButton, 0, 1);
+        layout.add(nextButton, 1, 1);
+        layout.add(generationLabel, 2, 1);
+
+        // Create the scene and show the stage
+        Scene scene = new Scene(layout, width, height);
+        primaryStage.setTitle("Game Of Life");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private static void createChessboard(List<List<Boolean>> input) {
+        Platform.runLater(() -> {
+            grid.getChildren().clear();
+        });
+        boolean isEmpty = false;
+        if(input == null || input.isEmpty()) {
+            isEmpty = true;
+        } else {
+        }
+        int rowSize = isEmpty ? size : input.size();
+        int recWidth = (width-200)/rowSize;
+        for (int row = 0; row < rowSize; row++) {
+            int colSize = isEmpty ? size : input.get(row).size();
+            int colHeight = (height-200)/colSize;
+            for (int col = 0; col < colSize; col++) {
+                Boolean value = (row + col) % 2 == 0;
+                if(!isEmpty) {
+                    value = input.get(row).get(col);
+                }
+                Rectangle rect = new Rectangle(recWidth, colHeight);
+                if (!value) {
+                    rect.setFill(Color.WHITE);
+                } else {
+                    rect.setFill(Color.BLACK);
+                }
+                final int x = col;
+                final int y = row;
+                rect.setOnMouseClicked(e -> handleChessboardClick(x, y));
+                Platform.runLater(() -> {
+                    grid.add(rect, x, y);
+                });
+            }
+        }
+    }
+
+    private static void handleChessboardClick(int x, int y) {
+        // Handle the click on the chessboard
+        System.out.println("Clicked on cell " + x + "," + y);
+    }
+
+    private static void handleStartButtonClick() {
+        // Handle the click on the Start button
+        System.out.println("Start button clicked");
+    }
+
+    private static void handleNextButtonClick() {
+        // Handle the click on the Next button
+        System.out.println("Next button clicked");
     }
 }
