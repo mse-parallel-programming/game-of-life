@@ -3,6 +3,7 @@ package ppr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
@@ -12,8 +13,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import ppr.messages.*;
 import ppr.util.Input;
@@ -31,61 +30,38 @@ import java.util.stream.Collectors;
  * @author Kacper Urbaniec
  * @version 2023-03-24
  */
-public class Main  extends  Application{
-    private  static final boolean benchmarkMode = false;
-    private static final int size = 10;
+public class Main extends Application {
+    private static final boolean benchmarkMode = true;
+    private static final int size = 30;
     private static final int width = 600;
     private static final int height = 600;
     private static int generationCount = 0;
     private static final GridPane grid = new GridPane();
     private static Node[][] gridPaneArray = null;
-    private static Label generationLabel = new Label();
+    private static final Label generationLabel = new Label();
     private static PrintWriter out;
     private static StartMessage start;
     private static Button startButton;
 
-    static class ResizableRectangle extends Rectangle {
-        ResizableRectangle(double w, double h) {
-            super(w, h);
-        }
-
-        @Override
-        public boolean isResizable() {
-            return true;
-        }
-
-        @Override
-        public double minWidth(double height) {
-            return 0.0;
-        }
-    }
-
-    private static String getStartJson() {
-        var objectMapper = new ObjectMapper();
-        try {
-            String startJson = objectMapper.writeValueAsString(start);
-            System.out.println(startJson);
-            System.out.println();
-            return startJson;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return "";
-    }
+    private ChangeListener<? super Number> widthChangeListener;
+    private ChangeListener<? super Number> heightChangeListener;
 
     public static void main(String[] args) {
 
         {
-            var textInput = ".........." +
-                    "...**....." +
-                    "....*....." +
-                    ".........." +
-                    ".........." +
-                    "...**....." +
-                    "..**......" +
-                    ".....*...." +
-                    "....*....." +
-                    "..........";
+            var textInput = "..............................".repeat(10) +
+                    ".............................." +
+                    ".............**..............." +
+                    "..............*..............." +
+                    ".............................." +
+                    ".............................." +
+                    ".............**..............." +
+                    "............**................" +
+                    "...............*.............." +
+                    "..............*..............." +
+                    ".............................." +
+                    "..............................".repeat(10);
+
             var grid = Input.textInput(textInput);
 
 
@@ -102,19 +78,20 @@ public class Main  extends  Application{
             // * value not null => BENCHMARK
             //
             // =================
-            if(benchmarkMode) {
-             var benchmarkInput = new BenchmarkInput();
-             benchmarkInput.generations = 10;
-             benchmarkInput.iterations = 10;
-             start.benchmarkInput = benchmarkInput;
+            if (benchmarkMode) {
+                var benchmarkInput = new BenchmarkInput();
+                benchmarkInput.generations = 10;
+                benchmarkInput.iterations = 10;
+                start.benchmarkInput = benchmarkInput;
             }
 
-            // Customize thread config for server
+            // =================
+            // (Optional) Customize thread config for server
+            // =================
             // var threadConfig = new ThreadConfig();
             // threadConfig.dynamic = false;
             // threadConfig.threadCount = 1;
             // start.threadConfig = threadConfig;
-
         }
 
 
@@ -131,7 +108,6 @@ public class Main  extends  Application{
             if (!benchmarkMode) {
                 interactive(in);
             } else {
-                generationLabel.setText("Generations: " + start.benchmarkInput.generations+"\n Iterations: "+start.benchmarkInput.iterations);
                 benchmark(in);
             }
 
@@ -140,8 +116,21 @@ public class Main  extends  Application{
         }
     }
 
+    private static String getStartJson() {
+        var objectMapper = new ObjectMapper();
+        try {
+            String startJson = objectMapper.writeValueAsString(start);
+            System.out.println(startJson);
+            System.out.println();
+            return startJson;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return "";
+    }
+
     public static void interactive(
-        BufferedReader in
+            BufferedReader in
     ) throws IOException, InterruptedException {
         int generations = start.input.generations;
         var objectMapper = new ObjectMapper();
@@ -151,7 +140,7 @@ public class Main  extends  Application{
 
         for (var i = 0; i < generations; ++i) {
             start.input.waitUntilManualOrNextIsTrue();
-            if(start.input.getEndProgram()) {
+            if (start.input.getEndProgram()) {
                 break;
             }
             // Get diff
@@ -164,8 +153,8 @@ public class Main  extends  Application{
             updateChessboard(grid);
             Platform.runLater(() -> {
                 generationCount = update.generation;
-                if(!benchmarkMode) {
-                    generationLabel.setText("Generation: " + update.generation);
+                if (!benchmarkMode) {
+                    generationLabel.setText("\tGeneration: " + update.generation);
                 }
             });
             System.out.println(update.generation);
@@ -177,7 +166,7 @@ public class Main  extends  Application{
             // Send if processing should continue or not
             boolean next = (i + 1) != generations;
 
-            if(start.input.getNext()) {
+            if (start.input.getNext()) {
                 next = true;
                 start.input.setNext(false);
             }
@@ -191,7 +180,11 @@ public class Main  extends  Application{
     public static void benchmark(
             BufferedReader in
     ) throws IOException, InterruptedException {
+        generationLabel.setText("Generations: " + start.benchmarkInput.generations + "\n Iterations: " + start.benchmarkInput.iterations);
         var objectMapper = new ObjectMapper();
+
+        // Prohibit handleChessboardClick
+        generationCount = 999;
 
         start.input.waitUntilManualOrNextIsTrue();
         out.println(getStartJson());
@@ -199,27 +192,19 @@ public class Main  extends  Application{
         var resultJson = in.readLine();
         var result = objectMapper.readValue(resultJson, BenchmarkMessage.class);
 
-        System.out.println("Average time: " + result.averageTime + " ms");
-        System.out.println("Min time: " + result.minTime + " ms");
-        System.out.println("Max time: " + result.maxTime + " ms");
+        System.out.println("Average time: " + String.format("%.4f", result.averageTime) + " ms");
+        System.out.println("Min time: " + String.format("%.4f", result.minTime) + " ms");
+        System.out.println("Max time: " + String.format("%.4f", result.maxTime) + " ms");
 
-        Platform.runLater(() -> generationLabel.setText("Average time: " + result.averageTime + " ms\nMin time: " + result.minTime + " ms\nMax time: " + result.maxTime + " ms"));
+        Platform.runLater(() ->
+                generationLabel.setText(
+                        "Average time: " + String.format("%.4f", result.averageTime) + " ms\n" +
+                                "Min time: " + String.format("%.4f", result.minTime) + " ms\n" +
+                                "Max time: " + String.format("%.4f", result.maxTime) + " ms")
+        );
         updateChessboard(result.grid);
         String gridString = gridString(result.grid);
         System.out.println(gridString);
-    }
-
-    public static String gridString(List<List<Boolean>> grid) {
-        return grid.stream()
-                .map(n -> n
-                        .stream()
-                        .map(n2 -> {
-                            if (n2) return "1";
-                            else return "0";
-                        })
-                        .collect(Collectors.joining(" ", "", "\n"))
-                )
-                .collect(Collectors.joining(""));
     }
 
     @Override
@@ -238,13 +223,30 @@ public class Main  extends  Application{
         layout.setCenter(grid);
 
         var bottomMenu = new HBox();
+        bottomMenu.setAlignment(Pos.CENTER_LEFT);
         var menuChildren = bottomMenu.getChildren();
         menuChildren.add(startButton);
-        if(!benchmarkMode) {
+        if (!benchmarkMode) {
             menuChildren.add(nextButton);
         }
         menuChildren.add(generationLabel);
         layout.setBottom(bottomMenu);
+
+        // Keep aspect ratio
+        // https://stackoverflow.com/a/66733052
+        widthChangeListener = (observable, oldValue, newValue) -> {
+            primaryStage.heightProperty().removeListener(heightChangeListener);
+            primaryStage.setHeight(newValue.doubleValue());
+            primaryStage.heightProperty().addListener(heightChangeListener);
+        };
+        heightChangeListener = (observable, oldValue, newValue) -> {
+            primaryStage.widthProperty().removeListener(widthChangeListener);
+            primaryStage.setWidth(newValue.doubleValue());
+            primaryStage.widthProperty().addListener(widthChangeListener);
+        };
+
+        primaryStage.widthProperty().addListener(widthChangeListener);
+        primaryStage.heightProperty().addListener(heightChangeListener);
 
         // Create the scene and show the stage
         Scene scene = new Scene(layout, width, height);
@@ -259,29 +261,21 @@ public class Main  extends  Application{
             start.input.grid = input;
             grid.getChildren().clear();
         });
+
         boolean isEmpty = input == null || input.isEmpty();
         int rowSize = isEmpty ? size : input.size();
         gridPaneArray = new Node[rowSize][rowSize];
-        int recWidth = (width-200)/rowSize;
+
         for (int row = 0; row < rowSize; row++) {
             int colSize = isEmpty ? size : input.get(row).size();
-            int colHeight = (height-200)/colSize;
             for (int col = 0; col < colSize; col++) {
                 Boolean value = (row + col) % 2 == 0;
-                if(!isEmpty) {
-                    value = input.get(row).get(col);
-                }
-                //Rectangle rect = new ResizableRectangle(10, 10);
+                if (!isEmpty) value = input.get(row).get(col);
+
                 var rect = new StackPane();
-                if (!value) {
-                    // rect.setFill(Color.WHITE);
-                    rect.setStyle("-fx-background-color: white;");
-                } else {
-                    // rect.setFill(Color.BLACK);
-                    rect.setStyle("-fx-background-color: black;");
-                }
-                // rect.widthProperty().bind(grid.widthProperty().divide(rowSize));
-                // rect.heightProperty().bind(grid.heightProperty().divide(rowSize));
+                if (!value) rect.setStyle("-fx-background-color: white;");
+                else rect.setStyle("-fx-background-color: black;");
+
                 final int x = col;
                 final int y = row;
                 rect.setOnMouseClicked(e -> handleChessboardClick(x, y));
@@ -291,24 +285,23 @@ public class Main  extends  Application{
                 });
             }
         }
+        // Automatic resizing
+        // https://stackoverflow.com/a/68055154
         for (int row = 0; row < rowSize; row++) {
             grid.getColumnConstraints().add(new ColumnConstraints(5, Control.USE_COMPUTED_SIZE, Double.POSITIVE_INFINITY, Priority.ALWAYS, HPos.CENTER, true));
             grid.getRowConstraints().add(new RowConstraints(5, Control.USE_COMPUTED_SIZE, Double.POSITIVE_INFINITY, Priority.ALWAYS, VPos.CENTER, true));
         }
     }
+
     private static void updateChessboard(List<List<Boolean>> input) {
         Platform.runLater(() -> {
             boolean isEmpty = input == null || input.isEmpty();
             int rowSize = isEmpty ? size : input.size();
             for (int row = 0; row < rowSize; row++) {
                 int colSize = isEmpty ? size : input.get(row).size();
-                int colHeight = (height - 200) / colSize;
                 for (int col = 0; col < colSize; col++) {
                     Boolean value = (row + col) % 2 == 0;
-                    if(!isEmpty) {
-                        value = input.get(row).get(col);
-                    }
-                    //Rectangle rect = new ResizableRectangle(10, 10);
+                    if (!isEmpty) value = input.get(row).get(col);
                     var rect = gridPaneArray[row][col];
                     if (!value) rect.setStyle("-fx-background-color: white;");
                     else rect.setStyle("-fx-background-color: black;");
@@ -318,7 +311,7 @@ public class Main  extends  Application{
     }
 
     private static void handleChessboardClick(int x, int y) {
-        if(generationCount > 0) {
+        if (generationCount > 0) {
             return;
         }
         // Handle the click on the chessboard
@@ -339,7 +332,7 @@ public class Main  extends  Application{
         boolean newManual = !start.input.getManual();
         start.input.setManual(newManual);
         startButton.setText(newManual ? "Start" : "Pause");
-        if(start.benchmarkInput != null) {
+        if (start.benchmarkInput != null) {
             generationLabel.setText("Starting benchmarking.");
             startButton.setVisible(false);
         }
@@ -349,5 +342,18 @@ public class Main  extends  Application{
         // Handle the click on the Next button
         System.out.println("Next button clicked");
         start.input.setNext(true);
+    }
+
+    public static String gridString(List<List<Boolean>> grid) {
+        return grid.stream()
+                .map(n -> n
+                        .stream()
+                        .map(n2 -> {
+                            if (n2) return "1";
+                            else return "0";
+                        })
+                        .collect(Collectors.joining(" ", "", "\n"))
+                )
+                .collect(Collectors.joining(""));
     }
 }
