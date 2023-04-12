@@ -223,6 +223,8 @@ The following benchmarks show runs with quite large grids. They continue the tre
 
 Raw data to benchmark runs can be found in [`RAWDATA.md`](./RAWDATA.md).
 
+<div style="page-break-after: always;"></div>
+
 ## Sources
 
 * https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
