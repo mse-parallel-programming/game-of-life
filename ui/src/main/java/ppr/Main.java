@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
  * @version 2023-03-24
  */
 public class Main extends Application {
-    private static final boolean benchmarkMode = true;
-    private static final int size = 30;
+    private static final boolean benchmarkMode = false;
+    private static int size = 30;
     private static final int width = 600;
     private static final int height = 600;
     private static int generationCount = 0;
@@ -63,6 +63,7 @@ public class Main extends Application {
                     "..............................".repeat(10);
 
             var grid = Input.textInput(textInput);
+            size = grid.size();
 
 
             start = new StartMessage();

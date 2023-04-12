@@ -94,7 +94,7 @@ The fix was to use `std::vector<unsigned char>` to get an array where each value
 
 The following benchmarks were presented at the [interim presentation](https://docs.google.com/presentation/d/1Dz9J-74cFxwajnAQ61yJIGTDnNab2eYyysM42fTp0qE/edit?usp=sharing). The average runtime is tolerable but the achieved speedup is quite low and worse than expected. 
 
-> Benchmarks were performed on a mobile Intel i7-8750H CPU (6 Total Cores / 12 Total Threads). All runs besides the default one [set the thread count manually and disable OpenMP dynamic to limit used threads](https://stackoverflow.com/a/11096742).
+> Benchmarks were performed on a mobile Intel i7-8750H CPU (6 Total Cores / 12 Total Threads). All runs besides the default one [set the thread count manually and disable OpenMP dynamic to limit used threads](https://stackoverflow.com/a/11096742). Application was compiled with the `MinGW w64 9.0` toolchain & run on Windows 11.
 
 ![](.img/initial-benchmark-1.png)
 
@@ -110,7 +110,7 @@ After using `std::vector<unsigned char>` to omit the problems related the specia
 
 Strangely, which improved performance the most was to use a standard `bool` array. Instead of passing the grid vectors via shared references to openmp, with pointers one could use now private variables initialized via `firstprivate` to share the grid pointers of the arrays. In some best cases it could improve average runtime by about 20-30 % depending on the parameters. 
 
-Why this change resulted in such improvements is quite speculative on our end. At the end of day, a vector is an abstraction over a standard array and each abstraction will add some overhead, even so slightly. Even a slightly increased time for index accesses/writes accumulates  when they are performed many times, as is the case in the game of life. Maybe the used `MinGW w64 9.0` toolchain optimizes standard arrays better than vectors in combination with openmp. But this are just assumptions that would require more research.
+Why this change resulted in such improvements is quite speculative on our end. At the end of day, a vector is an abstraction over a standard array and each abstraction will add some overhead, even so slightly. Even a slightly increased time for index accesses/writes accumulates when they are performed many times, as is the case in the game of life. Maybe the used `MinGW w64 9.0` toolchain optimizes standard arrays better than vectors in combination with openmp. But this are just assumptions that would require more research.
 
 ### No more Resetting
 
@@ -207,9 +207,11 @@ With turbo boost disabled the new benchmark results show more clearly the trend 
 
 ![](.img/re-benchmark-2.png)
 
+> These benchmarks show quite well that grid size is the most important  parallelisation factor, as all runs process the same amount of cells over time (512^2 \* 1600 = 1024^2 \* 400 = 2048^2 * 100), but runs with smaller sizes and more generations tend to perform worse than runs with larger sizes and fewer generations.
+
 ### Bigger Test Data
 
-One aspect when benchmarking is that test data is big enough. With a grid of 2048x2048 a speedup of 4.10 was achieved. What if one goes beyond this size even further? 
+One aspect when benchmarking is that test data is big enough. With a grid of *2048x2048* a speedup of *4.10* was achieved. What if one goes beyond this size even further? 
 
 The following benchmarks show runs with quite large grids. They continue the trend of the previous benchmarks and one can observe even better speedups, gradually approaching the theoretical maximum.
 

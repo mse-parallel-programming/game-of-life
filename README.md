@@ -1,13 +1,21 @@
 <div align="center">
   <p>Balint Taschner | Kacper Urbaniec | PPR | 06.04.2023</p>
+  <br>
+  <img src=".img/client.png" alt="game-of-life" width="250"></a>
+  <br>
   <h1><ins>Game of Life</ins></h1>
 </div>
 
+
 ## 📚 Report
 
-Report on approach, implementation details, failed attempts & benchmarks can be founder under [`REPORT.md`](REPORT.md).
+Final Report on approach, implementation details, failed attempts & benchmarks can be found under [`REPORT.md`](REPORT.md).
+
+> The interim presentation presented on 30.03.2023 can be found [here](https://docs.google.com/presentation/d/1Dz9J-74cFxwajnAQ61yJIGTDnNab2eYyysM42fTp0qE/edit?usp=sharing).
 
 ## 🛠️ Build
+
+> For development, the application was compiled with the `MinGW w64 9.0` toolchain & run on Windows 11.
 
 ```bash
 mkdir cmake-build-release
@@ -18,14 +26,18 @@ cmake --build cmake-build-release/ --target game_of_life -- -j 9
 cmake --build cmake-build-release/ --target test -- -j 9
 ```
 
-## 🚀 Run
+## 🔍 Tests 
 
-### Test Cases
+Unit tests were written to verify the correctness of the parallel implementation.
 
 ```bash
 cd cmake-build-release/test
 .\test.exe
 ```
+
+## 🚀 Run
+
+The *Game of Life* implementation consists of a server/backend written in C++ and a sample client written in Java. The server and client communicate via sockets through a JSON API, which is described below. For benchmarking purposes, the server also has a stand-alone benchmark mode that does not require a client and outputs the results directly to the terminal.
 
 ### Server Mode
 
@@ -43,6 +55,8 @@ Launch client
 cd ui/
 ./gradlew run
 ```
+
+> The client can be customised (switch interactive/benchmark mode, max generations, thread config, ...) through changing parameters found in `Main.java`.
 
 #### API
 
